@@ -59,12 +59,14 @@ private:
 
   // Set one hardness value to all joint
   void setStiffness(const float &stiffnessValue);
+  void setJointAngles(const AL::ALValue& jointNames, const AL::ALValue& jointAngles);
 
   // Used for postprocess sync with the DCM
   ProcessSignalConnection fDCMPostProcessConnection;
 
   // Sensors names
   std::vector<std::string> fSensorKeys;
+  std::vector<std::string> fActuatorKeys;
 
   // Used for fast memory access
   boost::shared_ptr<AL::ALMemoryFastAccess> fMemoryFastAccess;
