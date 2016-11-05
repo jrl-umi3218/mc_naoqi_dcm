@@ -2,12 +2,12 @@
 /// Example module to use fast method to get/set joints every 10ms with minimum delays.
 /// </summary>
 
+#include "fastgetsetdcm.h"
 #include <alcommon/albroker.h>
 #include <alcommon/almodule.h>
 #include <alcommon/alproxy.h>
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
-#include "fastgetsetdcm.h"
 
 #include <alerror/alerror.h>
 
@@ -46,6 +46,14 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
   addParam("name", "new joint names");
   addParam("values", "new joint angles (in radian)");
   BIND_METHOD(FastGetSetDCM::setJointAngles);
+
+  functionName("getSensorsOrder", getName(), "get names for each sensor index");
+  setReturn("sensor names", "array containing namess of all the sensors");
+  BIND_METHOD(FastGetSetDCM::getSensorsOrder);
+
+  functionName("getSensors", getName(), "get all sensor values");
+  setReturn("sensor values", "array containing values of all the sensors");
+  BIND_METHOD(FastGetSetDCM::getSensors);
 
   //  start the example.
   //  You can remove it and call FastGetSetDCM.startLoop() to start instead.
@@ -114,7 +122,7 @@ void FastGetSetDCM::initFastAccess()
 {
   fSensorKeys.clear();
   //  Here as an example inertial + joints + FSR are read
-  fSensorKeys.resize(7 + 25 + 6);
+  fSensorKeys.resize(48);
   // Joints Sensor list
   fSensorKeys[HEAD_PITCH] = std::string("Device/SubDeviceList/HeadPitch/Position/Sensor/Value");
   fSensorKeys[HEAD_YAW] = std::string("Device/SubDeviceList/HeadYaw/Position/Sensor/Value");
@@ -143,13 +151,24 @@ void FastGetSetDCM::initFastAccess()
   fSensorKeys[R_WRIST_YAW] = std::string("Device/SubDeviceList/RWristYaw/Position/Sensor/Value");
 
   // Inertial sensors
-  fSensorKeys[ACC_X] = std::string("Device/SubDeviceList/InertialSensor/AccX/Sensor/Value");
-  fSensorKeys[ACC_Y] = std::string("Device/SubDeviceList/InertialSensor/AccY/Sensor/Value");
-  fSensorKeys[ACC_Z] = std::string("Device/SubDeviceList/InertialSensor/AccZ/Sensor/Value");
-  fSensorKeys[GYR_X] = std::string("Device/SubDeviceList/InertialSensor/GyrX/Sensor/Value");
-  fSensorKeys[GYR_Y] = std::string("Device/SubDeviceList/InertialSensor/GyrY/Sensor/Value");
+  fSensorKeys[ACC_X] = std::string("Device/SubDeviceList/InertialSensor/AccelerometerX/Sensor/Value");
+  fSensorKeys[ACC_Y] = std::string("Device/SubDeviceList/InertialSensor/AccelerometerY/Sensor/Value");
+  fSensorKeys[ACC_Z] = std::string("Device/SubDeviceList/InertialSensor/AccelerometerZ/Sensor/Value");
+  fSensorKeys[GYR_X] = std::string("Device/SubDeviceList/InertialSensor/GyroscopeX/Sensor/Value");
+  fSensorKeys[GYR_Y] = std::string("Device/SubDeviceList/InertialSensor/GyroscopeY/Sensor/Value");
+  fSensorKeys[GYR_Z] = std::string("Device/SubDeviceList/InertialSensor/GyroscopeZ/Sensor/Value");
   fSensorKeys[ANGLE_X] = std::string("Device/SubDeviceList/InertialSensor/AngleX/Sensor/Value");
   fSensorKeys[ANGLE_Y] = std::string("Device/SubDeviceList/InertialSensor/AngleY/Sensor/Value");
+  fSensorKeys[ANGLE_Z] = std::string("Device/SubDeviceList/InertialSensor/AngleZ/Sensor/Value");
+
+  fSensorKeys[LF_FS_FL] = std::string("Device/SubDeviceList/LFoot/FSR/FrontLeft/Sensor/Value");
+  fSensorKeys[LF_FS_FR] = std::string("Device/SubDeviceList/LFoot/FSR/FrontRight/Sensor/Value");
+  fSensorKeys[LF_FS_RL] = std::string("Device/SubDeviceList/LFoot/FSR/RearLeft/Sensor/Value");
+  fSensorKeys[LF_FS_RR] = std::string("Device/SubDeviceList/LFoot/FSR/RearRight/Sensor/Value");
+  fSensorKeys[RF_FS_FL] = std::string("Device/SubDeviceList/RFoot/FSR/FrontLeft/Sensor/Value");
+  fSensorKeys[RF_FS_FR] = std::string("Device/SubDeviceList/RFoot/FSR/FrontRight/Sensor/Value");
+  fSensorKeys[RF_FS_RL] = std::string("Device/SubDeviceList/RFoot/FSR/RearLeft/Sensor/Value");
+  fSensorKeys[RF_FS_RR] = std::string("Device/SubDeviceList/RFoot/FSR/RearRight/Sensor/Value");
 
   // Some FSR sensors
   fSensorKeys[L_COP_X] = std::string("Device/SubDeviceList/LFoot/FSR/CenterOfPressure/X/Sensor/Value");
@@ -349,13 +368,12 @@ void FastGetSetDCM::setJointAngles(const AL::ALValue &jointNames, const AL::ALVa
     throw ALERROR(getName(), "setJointAngles", "Joint names and values must have the same size");
   }
 
-
   std::vector<std::string> jnames;
   jointNames.ToStringArray(jnames);
 
   for (size_t i = 0; i < jointNames.getSize(); i++)
   {
-    const std::string& joint_key = "Device/SubDeviceList/" +jnames[i] + "/Position/Actuator/Value";
+    const std::string &joint_key = "Device/SubDeviceList/" + jnames[i] + "/Position/Actuator/Value";
     int joint_id = std::find(fActuatorKeys.begin(), fActuatorKeys.end(), joint_key) - fActuatorKeys.begin();
     if (joint_id >= fActuatorKeys.size())
     {
@@ -367,6 +385,18 @@ void FastGetSetDCM::setJointAngles(const AL::ALValue &jointNames, const AL::ALVa
       initialJointSensorValues[joint_id] = joint_value;
     }
   }
+}
+
+AL::ALValue FastGetSetDCM::getSensorsOrder() const
+{
+  return AL::ALValue(fSensorKeys);
+}
+
+AL::ALValue FastGetSetDCM::getSensors()
+{
+  // Get all values from ALMemory using fastaccess
+  fMemoryFastAccess->GetValues(sensorValues);
+  return AL::ALValue(sensorValues);
 }
 
 void FastGetSetDCM::connectToDCMloop()

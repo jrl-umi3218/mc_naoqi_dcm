@@ -60,6 +60,8 @@ private:
   // Set one hardness value to all joint
   void setStiffness(const float &stiffnessValue);
   void setJointAngles(const AL::ALValue& jointNames, const AL::ALValue& jointAngles);
+	AL::ALValue getSensorsOrder() const;
+	AL::ALValue getSensors();
 
   // Used for postprocess sync with the DCM
   ProcessSignalConnection fDCMPostProcessConnection;
@@ -111,8 +113,18 @@ enum SensorType { HEAD_PITCH, HEAD_YAW,
                   ACC_Z,
                   GYR_X,
                   GYR_Y,
+									GYR_Z,
                   ANGLE_X,
                   ANGLE_Y,
+									ANGLE_Z,
+									LF_FS_FL,
+									LF_FS_FR,
+									LF_FS_RL,
+									LF_FS_RR,
+									RF_FS_FL,
+									RF_FS_FR,
+									RF_FS_RL,
+									RF_FS_RR,
                   L_COP_X,
                   L_COP_Y,
                   L_TOTAL_WEIGHT,
