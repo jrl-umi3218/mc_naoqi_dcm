@@ -84,7 +84,8 @@ private:
   AL::ALValue commands;
 };
 
-enum SensorType { HEAD_PITCH, HEAD_YAW,
+enum SensorType { HEAD_PITCH,
+									HEAD_YAW,
                   L_ANKLE_PITCH,
                   L_ANKLE_ROLL,
                   L_ELBOW_ROLL,
@@ -125,6 +126,8 @@ enum SensorType { HEAD_PITCH, HEAD_YAW,
 									RF_FS_FR,
 									RF_FS_RL,
 									RF_FS_RR,
+                  LF_FS_TOTAL,
+                  RF_FS_TOTAL,
                   L_COP_X,
                   L_COP_Y,
                   L_TOTAL_WEIGHT,

@@ -2,12 +2,12 @@
 /// Example module to use fast method to get/set joints every 10ms with minimum delays.
 /// </summary>
 
-#include "fastgetsetdcm.h"
 #include <alcommon/albroker.h>
 #include <alcommon/almodule.h>
 #include <alcommon/alproxy.h>
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
+#include "fastgetsetdcm.h"
 
 #include <alerror/alerror.h>
 
@@ -122,7 +122,7 @@ void FastGetSetDCM::initFastAccess()
 {
   fSensorKeys.clear();
   //  Here as an example inertial + joints + FSR are read
-  fSensorKeys.resize(48);
+  fSensorKeys.resize(50);
   // Joints Sensor list
   fSensorKeys[HEAD_PITCH] = std::string("Device/SubDeviceList/HeadPitch/Position/Sensor/Value");
   fSensorKeys[HEAD_YAW] = std::string("Device/SubDeviceList/HeadYaw/Position/Sensor/Value");
@@ -169,6 +169,8 @@ void FastGetSetDCM::initFastAccess()
   fSensorKeys[RF_FS_FR] = std::string("Device/SubDeviceList/RFoot/FSR/FrontRight/Sensor/Value");
   fSensorKeys[RF_FS_RL] = std::string("Device/SubDeviceList/RFoot/FSR/RearLeft/Sensor/Value");
   fSensorKeys[RF_FS_RR] = std::string("Device/SubDeviceList/RFoot/FSR/RearRight/Sensor/Value");
+  fSensorKeys[LF_FS_TOTAL] = std::string("Device/SubDeviceList/LFoot/FSR/TotalWeight/Sensor/Value");
+  fSensorKeys[RF_FS_TOTAL] = std::string("Device/SubDeviceList/RFoot/FSR/TotalWeight/Sensor/Value");
 
   // Some FSR sensors
   fSensorKeys[L_COP_X] = std::string("Device/SubDeviceList/LFoot/FSR/CenterOfPressure/X/Sensor/Value");
@@ -181,7 +183,7 @@ void FastGetSetDCM::initFastAccess()
   fActuatorKeys.clear();
   //  Here as an example inertial + joints + FSR are read
   fActuatorKeys.resize(25);
-  // Joints Sensor list
+  // Joints Actuator list
   fActuatorKeys[HEAD_PITCH] = std::string("Device/SubDeviceList/HeadPitch/Position/Actuator/Value");
   fActuatorKeys[HEAD_YAW] = std::string("Device/SubDeviceList/HeadYaw/Position/Actuator/Value");
   fActuatorKeys[L_ANKLE_PITCH] = std::string("Device/SubDeviceList/LAnklePitch/Position/Actuator/Value");
@@ -423,8 +425,8 @@ void FastGetSetDCM::connectToDCMloop()
 }
 
 /**
- *  WARNING
- *
+*  WARNING
+*
  *  Once this method is connected to DCM postprocess
  *  it will be called in Real Time every 10 milliseconds from DCM thread
  *  Dynamic allocation and system call are strictly forbidden in this method
