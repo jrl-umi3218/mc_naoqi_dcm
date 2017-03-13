@@ -43,9 +43,12 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
 
   functionName("setJointAngles", getName(),
                "set joint angles");
-  addParam("name", "new joint names");
   addParam("values", "new joint angles (in radian)");
   BIND_METHOD(FastGetSetDCM::setJointAngles);
+
+  functionName("getJointOrder", getName(), "get reference joint order");
+  setReturn("joint order", "array containing joint order");
+  BIND_METHOD(FastGetSetDCM::getJointOrder);
 
   functionName("getSensorsOrder", getName(), "get names for each sensor index");
   setReturn("sensor names", "array containing namess of all the sensors");
@@ -113,7 +116,7 @@ void FastGetSetDCM::init()
   initFastAccess();
   createPositionActuatorAlias();
   createHardnessActuatorAlias();
-  setStiffness(0.0f);  // Set to 1.0 for maximum stiffness, but only after a test
+  setStiffness(0.0f);
   preparePositionActuatorCommand();
 }
 
@@ -181,34 +184,33 @@ void FastGetSetDCM::initFastAccess()
   fSensorKeys[R_TOTAL_WEIGHT] = std::string("Device/SubDeviceList/RFoot/FSR/TotalWeight/Sensor/Value");
 
   fActuatorKeys.clear();
-  //  Here as an example inertial + joints + FSR are read
   fActuatorKeys.resize(25);
   // Joints Actuator list
-  fActuatorKeys[HEAD_PITCH] = std::string("Device/SubDeviceList/HeadPitch/Position/Actuator/Value");
-  fActuatorKeys[HEAD_YAW] = std::string("Device/SubDeviceList/HeadYaw/Position/Actuator/Value");
-  fActuatorKeys[L_ANKLE_PITCH] = std::string("Device/SubDeviceList/LAnklePitch/Position/Actuator/Value");
-  fActuatorKeys[L_ANKLE_ROLL] = std::string("Device/SubDeviceList/LAnkleRoll/Position/Actuator/Value");
-  fActuatorKeys[L_ELBOW_ROLL] = std::string("Device/SubDeviceList/LElbowRoll/Position/Actuator/Value");
-  fActuatorKeys[L_ELBOW_YAW] = std::string("Device/SubDeviceList/LElbowYaw/Position/Actuator/Value");
-  fActuatorKeys[L_HAND] = std::string("Device/SubDeviceList/LHand/Position/Actuator/Value");
-  fActuatorKeys[L_HIP_PITCH] = std::string("Device/SubDeviceList/LHipPitch/Position/Actuator/Value");
-  fActuatorKeys[L_HIP_ROLL] = std::string("Device/SubDeviceList/LHipRoll/Position/Actuator/Value");
-  fActuatorKeys[L_HIP_YAW_PITCH] = std::string("Device/SubDeviceList/LHipYawPitch/Position/Actuator/Value");
-  fActuatorKeys[L_KNEE_PITCH] = std::string("Device/SubDeviceList/LKneePitch/Position/Actuator/Value");
-  fActuatorKeys[L_SHOULDER_PITCH] = std::string("Device/SubDeviceList/LShoulderPitch/Position/Actuator/Value");
-  fActuatorKeys[L_SHOULDER_ROLL] = std::string("Device/SubDeviceList/LShoulderRoll/Position/Actuator/Value");
-  fActuatorKeys[L_WRIST_YAW] = std::string("Device/SubDeviceList/LWristYaw/Position/Actuator/Value");
-  fActuatorKeys[R_ANKLE_PITCH] = std::string("Device/SubDeviceList/RAnklePitch/Position/Actuator/Value");
-  fActuatorKeys[R_ANKLE_ROLL] = std::string("Device/SubDeviceList/RAnkleRoll/Position/Actuator/Value");
-  fActuatorKeys[R_ELBOW_ROLL] = std::string("Device/SubDeviceList/RElbowRoll/Position/Actuator/Value");
-  fActuatorKeys[R_ELBOW_YAW] = std::string("Device/SubDeviceList/RElbowYaw/Position/Actuator/Value");
-  fActuatorKeys[R_HAND] = std::string("Device/SubDeviceList/RHand/Position/Actuator/Value");
-  fActuatorKeys[R_HIP_PITCH] = std::string("Device/SubDeviceList/RHipPitch/Position/Actuator/Value");
-  fActuatorKeys[R_HIP_ROLL] = std::string("Device/SubDeviceList/RHipRoll/Position/Actuator/Value");
-  fActuatorKeys[R_KNEE_PITCH] = std::string("Device/SubDeviceList/RKneePitch/Position/Actuator/Value");
-  fActuatorKeys[R_SHOULDER_PITCH] = std::string("Device/SubDeviceList/RShoulderPitch/Position/Actuator/Value");
-  fActuatorKeys[R_SHOULDER_ROLL] = std::string("Device/SubDeviceList/RShoulderRoll/Position/Actuator/Value");
-  fActuatorKeys[R_WRIST_YAW] = std::string("Device/SubDeviceList/RWristYaw/Position/Actuator/Value");
+  fActuatorKeys[HEAD_PITCH] = std::string("HeadPitch");
+  fActuatorKeys[HEAD_YAW] = std::string("HeadYaw");
+  fActuatorKeys[L_ANKLE_PITCH] = std::string("LAnklePitch");
+  fActuatorKeys[L_ANKLE_ROLL] = std::string("LAnkleRoll");
+  fActuatorKeys[L_ELBOW_ROLL] = std::string("LElbowRoll");
+  fActuatorKeys[L_ELBOW_YAW] = std::string("LElbowYaw");
+  fActuatorKeys[L_HAND] = std::string("LHand");
+  fActuatorKeys[L_HIP_PITCH] = std::string("LHipPitch");
+  fActuatorKeys[L_HIP_ROLL] = std::string("LHipRoll");
+  fActuatorKeys[L_HIP_YAW_PITCH] = std::string("LHipYawPitch");
+  fActuatorKeys[L_KNEE_PITCH] = std::string("LKneePitch");
+  fActuatorKeys[L_SHOULDER_PITCH] = std::string("LShoulderPitch");
+  fActuatorKeys[L_SHOULDER_ROLL] = std::string("LShoulderRoll");
+  fActuatorKeys[L_WRIST_YAW] = std::string("LWristYaw");
+  fActuatorKeys[R_ANKLE_PITCH] = std::string("RAnklePitch");
+  fActuatorKeys[R_ANKLE_ROLL] = std::string("RAnkleRoll");
+  fActuatorKeys[R_ELBOW_ROLL] = std::string("RElbowRoll");
+  fActuatorKeys[R_ELBOW_YAW] = std::string("RElbowYaw");
+  fActuatorKeys[R_HAND] = std::string("RHand");
+  fActuatorKeys[R_HIP_PITCH] = std::string("RHipPitch");
+  fActuatorKeys[R_HIP_ROLL] = std::string("RHipRoll");
+  fActuatorKeys[R_KNEE_PITCH] = std::string("RKneePitch");
+  fActuatorKeys[R_SHOULDER_PITCH] = std::string("RShoulderPitch");
+  fActuatorKeys[R_SHOULDER_ROLL] = std::string("RShoulderRoll");
+  fActuatorKeys[R_WRIST_YAW] = std::string("RWristYaw");
 
   // Create the fast memory access
   fMemoryFastAccess->ConnectToVariables(getParentBroker(), fSensorKeys, false);
@@ -335,8 +337,7 @@ void FastGetSetDCM::setStiffness(const float &stiffnessValue)
   // increase stiffness with the "jointStiffness" Alias created at initialisation
   try
   {
-    // Get time : return the time in 1 seconde
-    DCMtime = dcmProxy->getTime(1000);
+    DCMtime = dcmProxy->getTime(0);
   }
   catch (const AL::ALError &e)
   {
@@ -348,7 +349,7 @@ void FastGetSetDCM::setStiffness(const float &stiffnessValue)
   // from last value to "stiffnessValue" in 1 seconde
   stiffnessCommands.arraySetSize(3);
   stiffnessCommands[0] = std::string("jointStiffness");
-  stiffnessCommands[1] = std::string("Merge");
+  stiffnessCommands[1] = std::string("ClearAll");
   stiffnessCommands[2].arraySetSize(1);
   stiffnessCommands[2][0].arraySetSize(2);
   stiffnessCommands[2][0][0] = stiffnessValue;
@@ -363,30 +364,14 @@ void FastGetSetDCM::setStiffness(const float &stiffnessValue)
   }
 }
 
-void FastGetSetDCM::setJointAngles(const AL::ALValue &jointNames, const AL::ALValue &jointValues)
+void FastGetSetDCM::setJointAngles(const AL::ALValue &jointValues)
 {
-  if (jointNames.getSize() != jointValues.getSize())
-  {
-    throw ALERROR(getName(), "setJointAngles", "Joint names and values must have the same size");
-  }
+  jointValues.ToFloatArray(initialJointSensorValues);
+}
 
-  std::vector<std::string> jnames;
-  jointNames.ToStringArray(jnames);
-
-  for (size_t i = 0; i < jointNames.getSize(); i++)
-  {
-    const std::string &joint_key = "Device/SubDeviceList/" + jnames[i] + "/Position/Actuator/Value";
-    int joint_id = std::find(fActuatorKeys.begin(), fActuatorKeys.end(), joint_key) - fActuatorKeys.begin();
-    if (joint_id >= fActuatorKeys.size())
-    {
-      throw ALERROR(getName(), "setJointAngles", "Joint " + joint_key + " not found, ");
-    }
-    else
-    {
-      const float joint_value = jointValues[i];
-      initialJointSensorValues[joint_id] = joint_value;
-    }
-  }
+AL::ALValue FastGetSetDCM::getJointOrder() const
+{
+  return AL::ALValue(fActuatorKeys);
 }
 
 AL::ALValue FastGetSetDCM::getSensorsOrder() const
@@ -415,8 +400,9 @@ void FastGetSetDCM::connectToDCMloop()
   // Connect callback to the DCM post proccess
   try
   {
+    //  onPreProcess is useful because it’s called just before the computation of orders sent to the chestboard (USB). Sending commands at this level means that you have the shortest delay to your command.
     fDCMPostProcessConnection =
-        getParentBroker()->getProxy("DCM")->getModule()->atPostProcess(boost::bind(&FastGetSetDCM::synchronisedDCMcallback, this));
+        getParentBroker()->getProxy("DCM")->getModule()->atPreProcess(boost::bind(&FastGetSetDCM::synchronisedDCMcallback, this));
   }
   catch (const AL::ALError &e)
   {
@@ -453,19 +439,12 @@ void FastGetSetDCM::synchronisedDCMcallback()
 
   commands[4][0] = DCMtime;  // To be used in the next cycle
 
+  // XXX make this faster with memcpy?
   for (int i = 0; i < 25; i++)
   {
     // new actuator value = first Sensor value
     commands[5][i][0] = initialJointSensorValues[i];
   }
-  // Uncomment this to activate
-  // Left Arm mirror Right Arm
-  // Get all values from ALMemory using fastaccess
-  // fMemoryFastAccess->GetValues(sensorValues);
-  // commands[5][L_SHOULDER_PITCH][0] = sensorValues[R_SHOULDER_PITCH];
-  // commands[5][L_SHOULDER_ROLL][0] = -sensorValues[R_SHOULDER_ROLL];
-  // commands[5][L_ELBOW_YAW][0] = -sensorValues[R_ELBOW_YAW];
-  // commands[5][L_ELBOW_ROLL][0] = -sensorValues[R_ELBOW_ROLL];
 
   try
   {

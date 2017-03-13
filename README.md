@@ -40,7 +40,7 @@ qibuild make -c cross-atom fastgetsetdcm
 And finally, let's deploy it on the robot:
 
 ```
-qibuild deploy -c atom nao@192.168.2.3:naoqi
+qibuild deploy -c cross-atom --url nao@192.168.2.3:naoqi fastgetsetdcm
 ```
 
 A final step is required to autoload the module on the robot.

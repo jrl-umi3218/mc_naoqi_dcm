@@ -5,26 +5,25 @@
 #ifndef _FAST_GET_SET_DCM_H
 #define _FAST_GET_SET_DCM_H
 
-#include <boost/shared_ptr.hpp>
 #include <alcommon/almodule.h>
+#include <boost/shared_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace AL
 {
-  class ALBroker;
-  class ALMemoryFastAccess;
-  class DCMProxy;
+class ALBroker;
+class ALMemoryFastAccess;
+class DCMProxy;
 }
-
 
 /// <summary>
 /// Example module tu use fast method to get/set joints every 10ms with minimum delays.
 /// </summary>
 class FastGetSetDCM : public AL::ALModule
 {
-public:
+ public:
   FastGetSetDCM(boost::shared_ptr<AL::ALBroker> pBroker,
-                    const std::string &pName );
+                const std::string &pName);
 
   virtual ~FastGetSetDCM();
 
@@ -34,8 +33,7 @@ public:
   // Stop the example
   void stopLoop();
 
-private:
-
+ private:
   // Initialisation of ALMemory/DCM link
   void init();
 
@@ -59,9 +57,10 @@ private:
 
   // Set one hardness value to all joint
   void setStiffness(const float &stiffnessValue);
-  void setJointAngles(const AL::ALValue& jointNames, const AL::ALValue& jointAngles);
-	AL::ALValue getSensorsOrder() const;
-	AL::ALValue getSensors();
+  void setJointAngles(const AL::ALValue &jointAngles);
+  AL::ALValue getJointOrder() const;
+  AL::ALValue getSensorsOrder() const;
+  AL::ALValue getSensors();
 
   // Used for postprocess sync with the DCM
   ProcessSignalConnection fDCMPostProcessConnection;
@@ -78,62 +77,64 @@ private:
   boost::shared_ptr<AL::DCMProxy> dcmProxy;
 
   // Used for the test actuator = sensor
-  std::vector<float>  initialJointSensorValues;
+  std::vector<float> initialJointSensorValues;
 
   // Used to store command to send
   AL::ALValue commands;
 };
 
-enum SensorType { HEAD_PITCH,
-									HEAD_YAW,
-                  L_ANKLE_PITCH,
-                  L_ANKLE_ROLL,
-                  L_ELBOW_ROLL,
-                  L_ELBOW_YAW,
-                  L_HAND,
-                  L_HIP_PITCH,
-                  L_HIP_ROLL,
-                  L_HIP_YAW_PITCH,
-                  L_KNEE_PITCH,
-                  L_SHOULDER_PITCH,
-                  L_SHOULDER_ROLL,
-                  L_WRIST_YAW,
-                  R_ANKLE_PITCH,
-                  R_ANKLE_ROLL,
-                  R_ELBOW_ROLL,
-                  R_ELBOW_YAW,
-                  R_HAND,
-                  R_HIP_PITCH,
-                  R_HIP_ROLL,
-                  R_KNEE_PITCH,
-                  R_SHOULDER_PITCH,
-                  R_SHOULDER_ROLL,
-                  R_WRIST_YAW,
-                  ACC_X,
-                  ACC_Y,
-                  ACC_Z,
-                  GYR_X,
-                  GYR_Y,
-									GYR_Z,
-                  ANGLE_X,
-                  ANGLE_Y,
-									ANGLE_Z,
-									LF_FS_FL,
-									LF_FS_FR,
-									LF_FS_RL,
-									LF_FS_RR,
-									RF_FS_FL,
-									RF_FS_FR,
-									RF_FS_RL,
-									RF_FS_RR,
-                  LF_FS_TOTAL,
-                  RF_FS_TOTAL,
-                  L_COP_X,
-                  L_COP_Y,
-                  L_TOTAL_WEIGHT,
-                  R_COP_X,
-                  R_COP_Y,
-                  R_TOTAL_WEIGHT};
+enum SensorType
+{
+  HEAD_PITCH,
+  HEAD_YAW,
+  L_ANKLE_PITCH,
+  L_ANKLE_ROLL,
+  L_ELBOW_ROLL,
+  L_ELBOW_YAW,
+  L_HAND,
+  L_HIP_PITCH,
+  L_HIP_ROLL,
+  L_HIP_YAW_PITCH,
+  L_KNEE_PITCH,
+  L_SHOULDER_PITCH,
+  L_SHOULDER_ROLL,
+  L_WRIST_YAW,
+  R_ANKLE_PITCH,
+  R_ANKLE_ROLL,
+  R_ELBOW_ROLL,
+  R_ELBOW_YAW,
+  R_HAND,
+  R_HIP_PITCH,
+  R_HIP_ROLL,
+  R_KNEE_PITCH,
+  R_SHOULDER_PITCH,
+  R_SHOULDER_ROLL,
+  R_WRIST_YAW,
+  ACC_X,
+  ACC_Y,
+  ACC_Z,
+  GYR_X,
+  GYR_Y,
+  GYR_Z,
+  ANGLE_X,
+  ANGLE_Y,
+  ANGLE_Z,
+  LF_FS_FL,
+  LF_FS_FR,
+  LF_FS_RL,
+  LF_FS_RR,
+  RF_FS_FL,
+  RF_FS_FR,
+  RF_FS_RL,
+  RF_FS_RR,
+  LF_FS_TOTAL,
+  RF_FS_TOTAL,
+  L_COP_X,
+  L_COP_Y,
+  L_TOTAL_WEIGHT,
+  R_COP_X,
+  R_COP_Y,
+  R_TOTAL_WEIGHT
+};
 
 #endif  // _FAST_GET_SET_DCM_H
-
