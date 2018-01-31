@@ -57,10 +57,10 @@ class FastGetSetDCM : public AL::ALModule
 
   // Set one hardness value to all joint
   void setStiffness(const float &stiffnessValue);
-  void setJointAngles(const AL::ALValue &jointAngles);
+  void setJointAngles(std::vector<float> jointValues);
   AL::ALValue getJointOrder() const;
-  AL::ALValue getSensorsOrder() const;
-  AL::ALValue getSensors();
+  std::vector<std::string> getSensorsOrder() const;
+  std::vector<float> getSensors();
 
   // Used for postprocess sync with the DCM
   ProcessSignalConnection fDCMPostProcessConnection;
@@ -85,31 +85,24 @@ class FastGetSetDCM : public AL::ALModule
 
 enum SensorType
 {
-  HEAD_PITCH,
+  KNEE_PITCH,
+  HIP_PITCH,
+  HIP_ROLL,
   HEAD_YAW,
-  L_ANKLE_PITCH,
-  L_ANKLE_ROLL,
-  L_ELBOW_ROLL,
-  L_ELBOW_YAW,
-  L_HAND,
-  L_HIP_PITCH,
-  L_HIP_ROLL,
-  L_HIP_YAW_PITCH,
-  L_KNEE_PITCH,
+  HEAD_PITCH,
   L_SHOULDER_PITCH,
   L_SHOULDER_ROLL,
+  L_ELBOW_YAW,
+  L_ELBOW_ROLL,
   L_WRIST_YAW,
-  R_ANKLE_PITCH,
-  R_ANKLE_ROLL,
-  R_ELBOW_ROLL,
-  R_ELBOW_YAW,
-  R_HAND,
-  R_HIP_PITCH,
-  R_HIP_ROLL,
-  R_KNEE_PITCH,
+  L_HAND,
   R_SHOULDER_PITCH,
   R_SHOULDER_ROLL,
+  R_ELBOW_YAW,
+  R_ELBOW_ROLL,
   R_WRIST_YAW,
+  R_HAND,
+
   ACC_X,
   ACC_Y,
   ACC_Z,
@@ -119,22 +112,8 @@ enum SensorType
   ANGLE_X,
   ANGLE_Y,
   ANGLE_Z,
-  LF_FS_FL,
-  LF_FS_FR,
-  LF_FS_RL,
-  LF_FS_RR,
-  RF_FS_FL,
-  RF_FS_FR,
-  RF_FS_RL,
-  RF_FS_RR,
-  LF_FS_TOTAL,
-  RF_FS_TOTAL,
-  L_COP_X,
-  L_COP_Y,
-  L_TOTAL_WEIGHT,
-  R_COP_X,
-  R_COP_Y,
-  R_TOTAL_WEIGHT
+
+  SENSOR_SIZE
 };
 
 #endif  // _FAST_GET_SET_DCM_H
