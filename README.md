@@ -1,9 +1,8 @@
 fastgetsetdcm
 ==
 
-Fast communication module with NAO joints. 
-This is a local NAO module, that needs to be cross-compiled
-for NAO, and put on the robot.
+Fast communication module with NAO/PEPPER sensors and actuators. 
+This is a local robot module, that needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot.
 
 How to build
 ==
@@ -33,7 +32,10 @@ Now, build the project
 qibuild init
 qisrc add fastgetsetdcm
 qibuild configure -c cross-atom fastgetsetdcm
-qibuild make -c cross-atom fastgetsetdcm
+cd build-cross-atom
+# Choose either "pepper" or "nao"
+cmake .. -DROBOT_NAME=<pepper|nao>
+make
 ```
 
 
@@ -51,8 +53,10 @@ Edit the file ~/naoqi/preferences/autoload.ini on the robot, and add
 /home/nao/naoqi/lib/naoqi/libfastgetsetdcm.so
 ```
 
-You can use it directly by restarting naoqi on the robot.
-Make sure NAO is stable before doing so, as it will servo off.
+You will also need to diable the ALMotion module to prevent it from conflicting with the controls from this module.
+
+You can now use it directly by restarting naoqi on the robot.
+Make sure the robot stable before doing so, as it will servo off.
 
 ```
 nao stop
