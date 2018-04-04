@@ -9,31 +9,31 @@ NAORobotModule::NAORobotModule()
   name = "nao";
 
   // Joints Sensor list
-  actuators.push_back("Device/SubDeviceList/HeadPitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/HeadYaw/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LAnklePitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LAnkleRoll/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LElbowRoll/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LElbowYaw/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LHand/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LHipPitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LHipRoll/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LHipYawPitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LKneePitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LShoulderPitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LShoulderRoll/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/LWristYaw/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RAnklePitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RAnkleRoll/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RElbowRoll/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RElbowYaw/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RHand/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RHipPitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RHipRoll/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RKneePitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RShoulderPitch/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RShoulderRoll/Position/Sensor/Value");
-  actuators.push_back("Device/SubDeviceList/RWristYaw/Position/Sensor/Value");
+  actuators.push_back("HeadPitch");
+  actuators.push_back("HeadYaw");
+  actuators.push_back("LAnklePitch");
+  actuators.push_back("LAnkleRoll");
+  actuators.push_back("LElbowRoll");
+  actuators.push_back("LElbowYaw");
+  actuators.push_back("LHand");
+  actuators.push_back("LHipPitch");
+  actuators.push_back("LHipRoll");
+  actuators.push_back("LHipYawPitch");
+  actuators.push_back("LKneePitch");
+  actuators.push_back("LShoulderPitch");
+  actuators.push_back("LShoulderRoll");
+  actuators.push_back("LWristYaw");
+  actuators.push_back("RAnklePitch");
+  actuators.push_back("RAnkleRoll");
+  actuators.push_back("RElbowRoll");
+  actuators.push_back("RElbowYaw");
+  actuators.push_back("RHand");
+  actuators.push_back("RHipPitch");
+  actuators.push_back("RHipRoll");
+  actuators.push_back("RKneePitch");
+  actuators.push_back("RShoulderPitch");
+  actuators.push_back("RShoulderRoll");
+  actuators.push_back("RWristYaw");
 
   for (unsigned i = 0; i < actuators.size(); ++i)
   {
