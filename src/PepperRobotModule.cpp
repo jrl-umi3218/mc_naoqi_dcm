@@ -5,6 +5,8 @@ namespace dcm_module
 PepperRobotModule::PepperRobotModule() : RobotModule()
 {
   name = "pepper";
+
+  // Joints Sensor list
   actuators.push_back("KneePitch");
   actuators.push_back("HipPitch");
   actuators.push_back("HipRoll");
@@ -32,6 +34,7 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
     readSensorKeys.push_back("Device/SubDeviceList/" + actuator + "/Position/Sensor/Value");
   }
 
+  // Inertial sensors
   sensors.push_back("AccelerometerX");
   sensors.push_back("AccelerometerY");
   sensors.push_back("AccelerometerZ");
@@ -42,15 +45,39 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   sensors.push_back("AngleY");
   sensors.push_back("AngleZ");
 
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AccelerometerX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AccelerometerY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AccelerometerZ/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/GyroscopeX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/GyroscopeY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/GyroscopeZ/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AngleX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AngleY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AngleZ/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AccelerometerX/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AccelerometerY/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AccelerometerZ/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/GyroscopeX/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/GyroscopeY/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/GyroscopeZ/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AngleX/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AngleY/Sensor/Value");
+  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AngleZ/Sensor/Value");
+
+  // Leds
+  leds.push_back("Left/45Deg");
+  leds.push_back("Left/90Deg");
+  leds.push_back("Right/0Deg");
+  leds.push_back("Right/45Deg");
+
+  for (unsigned i = 0; i < leds.size(); ++i)
+  {
+    setRedLedKeys.push_back("Device/SubDeviceList/Face/Led/Red/" + leds[i] + "/Actuator/Value");
+    setGreenLedKeys.push_back("Device/SubDeviceList/Face/Led/Green/" + leds[i] + "/Actuator/Value");
+    setBlueLedKeys.push_back("Device/SubDeviceList/Face/Led/Blue/" + leds[i] + "/Actuator/Value");
+  }
+
+  // Wheels
+  wheels.push_back("WheelFL");
+  wheels.push_back("WheelFR");
+  wheels.push_back("WheelB");
+
+  for (unsigned i = 0; i < wheels.size(); ++i)
+  {
+    setWheelStiffnessKeys.push_back("Device/SubDeviceList/" + wheels[i] + "/Stiffness/Actuator/Value");
+    setWheelActuatorKeys.push_back("Device/SubDeviceList/" + wheels[i] + "/Speed/Actuator/Value");
+  }
 }
 
 } /* dcm_module */

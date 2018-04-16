@@ -76,6 +76,7 @@ class FastGetSetDCM : public AL::ALModule
    * Stiffness value that will be applied to all joints
    */
   void setStiffness(const float &stiffnessValue);
+
   /**
    * @brief Sets the desired actuator position to the specified one.
    *
@@ -83,6 +84,7 @@ class FastGetSetDCM : public AL::ALModule
    * Joint values, specified in the same order as RobotModule::actuators.
    */
   void setJointAngles(std::vector<float> jointValues);
+
   /**
    * @brief Joint order in which the actuator values will be expressed
    *
@@ -90,6 +92,7 @@ class FastGetSetDCM : public AL::ALModule
    * Reference joint order as defined in RobotModule::actuators
    */
   std::vector<std::string> getJointOrder() const;
+
   /**
    * @brief List of readable sensor names.
    * getSensors() will return sensor values corresponding to these.
@@ -98,12 +101,73 @@ class FastGetSetDCM : public AL::ALModule
    * Human-readable list of sensor names, as defined in RobotModule::sensors
    */
   std::vector<std::string> getSensorsOrder() const;
+
   /**
    * @brief Sensor values in the order expressed by getSensorsOrder()
    *
    * @return Vector of sensor values
    */
   std::vector<float> getSensors();
+
+  /**
+   * Make robot say a sentence given in argument
+   */
+  void sayText(const std::string& toSay);
+
+  /**
+   * Create DCM Eye Led Alias
+   */
+  void createLedAlias(std::string aliaseName, std::vector<std::string> keysVector);
+  void createLedAliases();
+
+  /*! Prepare Command ALValue to send command to led */
+  void prepareLedCommand();
+
+  /**
+   * Change eye color
+   */
+  void changeLedColor(const float &r, const float &g, const float &b);
+
+  /**
+   * Store command to send to leds
+   */
+  AL::ALValue redLedCommands;
+  AL::ALValue greenLedCommands;
+  AL::ALValue blueLedCommands;
+
+  /*! Create DCM hardness wheel alias */
+  void createHardnessWheelAlias();
+
+  /*! Create DCM śpeed wheel alias */
+  void createSpeedWheelAlias();
+
+  /**
+   * @brief Set one hardness value to all wheels
+   *
+   * @param stiffnessValue
+   * Stiffness value that will be applied to all wheels
+   */
+  void setWheelsStiffness(const float &stiffnessValue);
+
+  /**
+   * @brief Set speed values to the wheels
+   *
+   * @param speed_fl
+   * Speed value that will be applied to front left wheel
+   * @param speed_fr
+   * Speed value that will be applied to front right wheel
+   * @param speed_b
+   * Speed value that will be applied to back wheel
+   */
+  void setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b);
+
+  /**
+   * Store commands to send to wheels
+   */
+  AL::ALValue wheelCommands;
+
+  /*! Prepare Command ALValue to send command to wheels */
+  void prepareWheelsCommand();
 
  private:
   // Used for postprocess sync with the DCM

@@ -18,6 +18,8 @@
 // Used to read values of ALMemory directly in RAM
 #include <almemoryfastaccess/almemoryfastaccess.h>
 
+#include <alproxies/altexttospeechproxy.h>
+
 #include <boost/bind.hpp>
 
 namespace dcm_module
@@ -56,25 +58,114 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
   setReturn("sensor values", "array containing values of all the sensors");
   BIND_METHOD(FastGetSetDCM::getSensors);
 
-// XXX should be a compile-time check, but no C++11 support makes it tricky
-#if defined(PEPPER) || defined(NAO)
-#else
-#error "Only PEPPER and NAO robots are supported"
-#endif
+  functionName("sayText", getName(), "Say a given sentence.");
+  addParam("toSay", "The sentence to be said.");
+  BIND_METHOD(FastGetSetDCM::sayText);
 
-#ifdef PEPPER
-  robot_module = PepperRobotModule();
-#else
-  robot_module = NAORobotModule();
-#endif
+  functionName("changeLedColor", getName() , "changeLedColor");
+  addParam("r", "red intensity %");
+  addParam("g", "green intensity %");
+  addParam("b", "blue intensity %");
+  BIND_METHOD(FastGetSetDCM::changeLedColor);
+
+  // XXX should be a compile-time check, but no C++11 support makes it tricky
+  #if defined(PEPPER) || defined(NAO)
+  #else
+  #error "Only PEPPER and NAO robots are supported"
+  #endif
+
+  #ifdef PEPPER
+
+    functionName("setWheelsStiffness" , getName(),
+                  "change stiffness of all wheels imediately");
+    addParam("value", "new stiffness value from 0.0 to 1.0");
+    BIND_METHOD(FastGetSetDCM::setWheelsStiffness);
+
+    functionName("setWheelSpeed" , getName(),
+                  "change wheel speed");
+    addParam("speed_fl", "new speed");
+    addParam("speed_fr", "new speed");
+    addParam("speed_b", "new speed");
+    BIND_METHOD(FastGetSetDCM::setWheelSpeed);
+
+    robot_module = PepperRobotModule();
+  #else
+    robot_module = NAORobotModule();
+  #endif
 
   startLoop();
 }
+
 
 FastGetSetDCM::~FastGetSetDCM()
 {
   stopLoop();
 }
+
+
+void FastGetSetDCM::sayText(const std::string &toSay) {
+  std::cout << "Saying the phrase in the console..." << std::endl;
+  std::cout << toSay << std::endl;
+  try
+  {
+    /** Create a proxy to TTS.*/
+    AL::ALTextToSpeechProxy tts(getParentBroker());
+    /** Call the say method. */
+    tts.say(toSay);
+    /** Note: on the desktop you won't hear anything, but you should see
+    * some logs on the naoqi you are connected to. */
+  }
+  catch(const AL::ALError&)
+  {
+    qiLogError("module.example") << "Could not get proxy to ALTextToSpeech" << std::endl;
+  }
+}
+
+void FastGetSetDCM::changeLedColor(const float &r, const float &g, const float &b)
+{
+  int DCMtime;
+  try
+  {
+    DCMtime = dcmProxy->getTime(0);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "changeLedColor()", "Error on DCM getTime : " + e.toString());
+  }
+
+  redLedCommands[4][0] = DCMtime;
+
+  for (int i=0; i<robot_module.setRedLedKeys.size(); i++)
+  {
+    redLedCommands[5][i][0] = r;
+  }
+
+  greenLedCommands[4][0] = DCMtime;
+
+  for (int i=0; i<robot_module.setGreenLedKeys.size(); i++)
+  {
+    greenLedCommands[5][i][0] = g;
+  }
+
+  blueLedCommands[4][0] = DCMtime;
+
+  for (int i=0; i<robot_module.setBlueLedKeys.size(); i++)
+  {
+    blueLedCommands[5][i][0] = b;
+  }
+
+  try
+  {
+    dcmProxy->setAlias(redLedCommands);
+    dcmProxy->setAlias(greenLedCommands);
+    dcmProxy->setAlias(blueLedCommands);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "changeLedColor()", "Error when sending command to DCM : " + e.toString());
+  }
+}
+
 
 // Start the example
 void FastGetSetDCM::startLoop()
@@ -124,6 +215,15 @@ void FastGetSetDCM::init()
   createHardnessActuatorAlias();
   setStiffness(0.0f);
   preparePositionActuatorCommand();
+  createLedAliases();
+  prepareLedCommand();
+
+  #ifdef PEPPER
+    createHardnessWheelAlias();
+    createSpeedWheelAlias();
+    setWheelsStiffness(0.0f);
+    prepareWheelsCommand();
+  #endif
 }
 
 void FastGetSetDCM::initFastAccess()
@@ -154,6 +254,199 @@ void FastGetSetDCM::createPositionActuatorAlias()
   catch (const AL::ALError &e)
   {
     throw ALERROR(getName(), "createPositionActuatorAlias()", "Error when creating Alias : " + e.toString());
+  }
+}
+
+void FastGetSetDCM::createLedAlias(std::string aliaseName, std::vector<std::string> keysVector)
+{
+  AL::ALValue ledAliasses;
+
+  ledAliasses.arraySetSize(2);
+  ledAliasses[0] = std::string(aliaseName);
+  ledAliasses[1].arraySetSize(keysVector.size());
+
+  // Led list
+  for (unsigned i = 0; i < keysVector.size(); ++i)
+  {
+    ledAliasses[1][i] = keysVector[i];
+  }
+
+  // Create alias
+  try
+  {
+    dcmProxy->createAlias(ledAliasses);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "createLedAlias()", "Error when creating Alias : " + e.toString());
+  }
+}
+
+void FastGetSetDCM::prepareLedCommand()
+{
+  redLedCommands.arraySetSize(6);
+  redLedCommands[0] = std::string("redLed");
+  redLedCommands[1] = std::string("ClearAll");
+  redLedCommands[2] = std::string("time-separate");
+  redLedCommands[3] = 0;
+  redLedCommands[4].arraySetSize(1);
+  redLedCommands[5].arraySetSize(robot_module.setRedLedKeys.size());
+
+  greenLedCommands.arraySetSize(6);
+  greenLedCommands[0] = std::string("greenLed");
+  greenLedCommands[1] = std::string("ClearAll");
+  greenLedCommands[2] = std::string("time-separate");
+  greenLedCommands[3] = 0;
+  greenLedCommands[4].arraySetSize(1);
+  greenLedCommands[5].arraySetSize(robot_module.setGreenLedKeys.size());
+
+  blueLedCommands.arraySetSize(6);
+  blueLedCommands[0] = std::string("blueLed");
+  blueLedCommands[1] = std::string("ClearAll");
+  blueLedCommands[2] = std::string("time-separate");
+  blueLedCommands[3] = 0;
+  blueLedCommands[4].arraySetSize(1);
+  blueLedCommands[5].arraySetSize(robot_module.setBlueLedKeys.size());
+
+  for (int i=0; i<robot_module.setRedLedKeys.size(); i++)
+  {
+    redLedCommands[5][i].arraySetSize(1);
+    greenLedCommands[5][i].arraySetSize(1);
+    blueLedCommands[5][i].arraySetSize(1);
+  }
+}
+
+void FastGetSetDCM::createLedAliases()
+{
+  createLedAlias("redLed", robot_module.setRedLedKeys);
+  createLedAlias("greenLed", robot_module.setGreenLedKeys);
+  createLedAlias("blueLed", robot_module.setBlueLedKeys);
+}
+
+void FastGetSetDCM::createHardnessWheelAlias()
+{
+  AL::ALValue jointAliasses;
+  // Alias for all joint stiffness
+  jointAliasses.clear();
+  jointAliasses.arraySetSize(2);
+  jointAliasses[0] = std::string("wheelStiffness");
+  jointAliasses[1].arraySetSize(robot_module.setWheelStiffnessKeys.size());
+
+  // stiffness list
+  for (unsigned i = 0; i < robot_module.setWheelStiffnessKeys.size(); ++i)
+  {
+    jointAliasses[1][i] = robot_module.setWheelStiffnessKeys[i];
+  }
+
+  // Create alias
+  try
+  {
+    dcmProxy->createAlias(jointAliasses);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "createHardnessWheelAlias()", "Error when creating Alias : " + e.toString());
+  }
+}
+
+void FastGetSetDCM::createSpeedWheelAlias()
+{
+  AL::ALValue jointAliasses;
+
+  jointAliasses.arraySetSize(2);
+  jointAliasses[0] = std::string("wheelSpeed");
+  jointAliasses[1].arraySetSize(robot_module.setWheelActuatorKeys.size());
+
+  // Joints actuator list
+  for (unsigned i = 0; i < robot_module.setWheelActuatorKeys.size(); ++i)
+  {
+    jointAliasses[1][i] = robot_module.setWheelActuatorKeys[i];
+  }
+
+  // Create alias
+  try
+  {
+    dcmProxy->createAlias(jointAliasses);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "createSpeedWheelAlias()", "Error when creating Alias : " + e.toString());
+  }
+}
+
+void FastGetSetDCM::prepareWheelsCommand(){
+  // prepare command
+  wheelCommands.arraySetSize(6);
+  wheelCommands[0] = std::string("wheelSpeed");
+  wheelCommands[1] = std::string("ClearAll");
+  wheelCommands[2] = std::string("time-separate");
+  wheelCommands[3] = 0;
+
+  wheelCommands[4].arraySetSize(1);
+
+  wheelCommands[5].arraySetSize(robot_module.setWheelActuatorKeys.size());
+
+  for (int i=0; i<robot_module.setWheelActuatorKeys.size(); i++)
+  {
+    wheelCommands[5][i].arraySetSize(1);
+  }
+}
+
+void FastGetSetDCM::setWheelsStiffness(const float &stiffnessValue)
+{
+  AL::ALValue stiffnessCommands;
+  int DCMtime;
+  try
+  {
+    DCMtime = dcmProxy->getTime(0);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "setStiffness()", "Error on DCM getTime : " + e.toString());
+  }
+
+  stiffnessCommands.arraySetSize(3);
+  stiffnessCommands[0] = std::string("wheelStiffness");
+  stiffnessCommands[1] = std::string("Merge");
+  stiffnessCommands[2].arraySetSize(1);
+  stiffnessCommands[2][0].arraySetSize(2);
+  stiffnessCommands[2][0][0] = stiffnessValue;
+  stiffnessCommands[2][0][1] = DCMtime;
+  try
+  {
+    dcmProxy->set(stiffnessCommands);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "setWheelsStiffness()", "Error when sending stiffness to DCM : " + e.toString());
+  }
+}
+
+void FastGetSetDCM::setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b)
+{
+  int DCMtime;
+
+  try
+  {
+    DCMtime = dcmProxy->getTime(0);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "setWheelSpeed()", "Error on DCM getTime : " + e.toString());
+  }
+
+  wheelCommands[4][0] = DCMtime;
+  wheelCommands[5][0][0] = speed_fl;
+  wheelCommands[5][1][0] = speed_fr;
+  wheelCommands[5][2][0] = speed_b;
+
+  try
+  {
+    dcmProxy->setAlias(wheelCommands);
+  }
+  catch (const AL::ALError &e)
+  {
+    throw ALERROR(getName(), "setWheelSpeed()", "Error when sending command to DCM : " + e.toString());
   }
 }
 

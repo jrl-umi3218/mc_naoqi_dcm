@@ -96,6 +96,20 @@ NAORobotModule::NAORobotModule()
   readSensorKeys.push_back("Device/SubDeviceList/LFoot/FSR/CenterOfPressure/Y/Sensor/Value");
   readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/CenterOfPressure/X/Sensor/Value");
   readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/CenterOfPressure/Y/Sensor/Value");
+
+  // Leds
+  leds.push_back("Left/45Deg");
+  leds.push_back("Left/90Deg");
+  leds.push_back("Right/0Deg");
+  leds.push_back("Right/45Deg");
+
+  for (unsigned i = 0; i < leds.size(); ++i)
+  {
+    const std::string& led = leds[i];
+    setRedLedKeys.push_back("Device/SubDeviceList/Face/Led/Red/" + led + "/Actuator/Value");
+    setGreenLedKeys.push_back("Device/SubDeviceList/Face/Led/Green/" + led + "/Actuator/Value");
+    setBlueLedKeys.push_back("Device/SubDeviceList/Face/Led/Blue/" + led + "/Actuator/Value");
+  }
 }
 
 } /* dcm_module */
