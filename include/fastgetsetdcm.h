@@ -112,7 +112,7 @@ class FastGetSetDCM : public AL::ALModule
   /**
    * Make robot say a sentence given in argument
    */
-  void sayText(const std::string& toSay);
+  void sayText(const std::string &toSay);
 
   /**
    * Create DCM Eye Led Alias
@@ -127,13 +127,6 @@ class FastGetSetDCM : public AL::ALModule
    * Change eye color
    */
   void changeLedColor(const float &r, const float &g, const float &b);
-
-  /**
-   * Store command to send to leds
-   */
-  AL::ALValue redLedCommands;
-  AL::ALValue greenLedCommands;
-  AL::ALValue blueLedCommands;
 
   /*! Create DCM hardness wheel alias */
   void createHardnessWheelAlias();
@@ -161,11 +154,6 @@ class FastGetSetDCM : public AL::ALModule
    */
   void setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b);
 
-  /**
-   * Store commands to send to wheels
-   */
-  AL::ALValue wheelCommands;
-
   /*! Prepare Command ALValue to send command to wheels */
   void prepareWheelsCommand();
 
@@ -186,6 +174,23 @@ class FastGetSetDCM : public AL::ALModule
   // Used to store command to send
   AL::ALValue commands;
 
+  /**
+   * Store command to send to leds
+   */
+  AL::ALValue redLedCommands;
+  AL::ALValue greenLedCommands;
+  AL::ALValue blueLedCommands;
+
+  /**
+   * Store commands to send to wheels
+   */
+  AL::ALValue wheelCommands;
+
+  /**
+   * \brief The RobotModule describes the sensors names and their corresponding
+   * naoqi keys. The intent is to have a generic dcm module for both NAO and
+   * PEPPER robots.
+   */
   RobotModule robot_module;
 };
 

@@ -62,50 +62,47 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
   addParam("toSay", "The sentence to be said.");
   BIND_METHOD(FastGetSetDCM::sayText);
 
-  functionName("changeLedColor", getName() , "changeLedColor");
+  functionName("changeLedColor", getName(), "changeLedColor");
   addParam("r", "red intensity %");
   addParam("g", "green intensity %");
   addParam("b", "blue intensity %");
   BIND_METHOD(FastGetSetDCM::changeLedColor);
 
-  // XXX should be a compile-time check, but no C++11 support makes it tricky
-  #if defined(PEPPER) || defined(NAO)
-  #else
-  #error "Only PEPPER and NAO robots are supported"
-  #endif
+// XXX should be a compile-time check, but no C++11 support makes it tricky
+#if defined(PEPPER) || defined(NAO)
+#else
+#error "Only PEPPER and NAO robots are supported"
+#endif
 
-  #ifdef PEPPER
+#ifdef PEPPER
 
-    functionName("setWheelsStiffness" , getName(),
-                  "change stiffness of all wheels imediately");
-    addParam("value", "new stiffness value from 0.0 to 1.0");
-    BIND_METHOD(FastGetSetDCM::setWheelsStiffness);
+  functionName("setWheelsStiffness", getName(),
+               "change stiffness of all wheels imediately");
+  addParam("value", "new stiffness value from 0.0 to 1.0");
+  BIND_METHOD(FastGetSetDCM::setWheelsStiffness);
 
-    functionName("setWheelSpeed" , getName(),
-                  "change wheel speed");
-    addParam("speed_fl", "new speed");
-    addParam("speed_fr", "new speed");
-    addParam("speed_b", "new speed");
-    BIND_METHOD(FastGetSetDCM::setWheelSpeed);
+  functionName("setWheelSpeed", getName(),
+               "change wheel speed");
+  addParam("speed_fl", "new speed");
+  addParam("speed_fr", "new speed");
+  addParam("speed_b", "new speed");
+  BIND_METHOD(FastGetSetDCM::setWheelSpeed);
 
-    robot_module = PepperRobotModule();
-  #else
-    robot_module = NAORobotModule();
-  #endif
+  robot_module = PepperRobotModule();
+#else
+  robot_module = NAORobotModule();
+#endif
 
   startLoop();
 }
-
 
 FastGetSetDCM::~FastGetSetDCM()
 {
   stopLoop();
 }
 
-
-void FastGetSetDCM::sayText(const std::string &toSay) {
-  std::cout << "Saying the phrase in the console..." << std::endl;
-  std::cout << toSay << std::endl;
+void FastGetSetDCM::sayText(const std::string &toSay)
+{
   try
   {
     /** Create a proxy to TTS.*/
@@ -115,7 +112,7 @@ void FastGetSetDCM::sayText(const std::string &toSay) {
     /** Note: on the desktop you won't hear anything, but you should see
     * some logs on the naoqi you are connected to. */
   }
-  catch(const AL::ALError&)
+  catch (const AL::ALError &)
   {
     qiLogError("module.example") << "Could not get proxy to ALTextToSpeech" << std::endl;
   }
@@ -135,21 +132,21 @@ void FastGetSetDCM::changeLedColor(const float &r, const float &g, const float &
 
   redLedCommands[4][0] = DCMtime;
 
-  for (int i=0; i<robot_module.setRedLedKeys.size(); i++)
+  for (int i = 0; i < robot_module.setRedLedKeys.size(); i++)
   {
     redLedCommands[5][i][0] = r;
   }
 
   greenLedCommands[4][0] = DCMtime;
 
-  for (int i=0; i<robot_module.setGreenLedKeys.size(); i++)
+  for (int i = 0; i < robot_module.setGreenLedKeys.size(); i++)
   {
     greenLedCommands[5][i][0] = g;
   }
 
   blueLedCommands[4][0] = DCMtime;
 
-  for (int i=0; i<robot_module.setBlueLedKeys.size(); i++)
+  for (int i = 0; i < robot_module.setBlueLedKeys.size(); i++)
   {
     blueLedCommands[5][i][0] = b;
   }
@@ -165,7 +162,6 @@ void FastGetSetDCM::changeLedColor(const float &r, const float &g, const float &
     throw ALERROR(getName(), "changeLedColor()", "Error when sending command to DCM : " + e.toString());
   }
 }
-
 
 // Start the example
 void FastGetSetDCM::startLoop()
@@ -218,12 +214,12 @@ void FastGetSetDCM::init()
   createLedAliases();
   prepareLedCommand();
 
-  #ifdef PEPPER
-    createHardnessWheelAlias();
-    createSpeedWheelAlias();
-    setWheelsStiffness(0.0f);
-    prepareWheelsCommand();
-  #endif
+#ifdef PEPPER
+  createHardnessWheelAlias();
+  createSpeedWheelAlias();
+  setWheelsStiffness(0.0f);
+  prepareWheelsCommand();
+#endif
 }
 
 void FastGetSetDCM::initFastAccess()
@@ -308,7 +304,7 @@ void FastGetSetDCM::prepareLedCommand()
   blueLedCommands[4].arraySetSize(1);
   blueLedCommands[5].arraySetSize(robot_module.setBlueLedKeys.size());
 
-  for (int i=0; i<robot_module.setRedLedKeys.size(); i++)
+  for (int i = 0; i < robot_module.setRedLedKeys.size(); i++)
   {
     redLedCommands[5][i].arraySetSize(1);
     greenLedCommands[5][i].arraySetSize(1);
@@ -374,7 +370,8 @@ void FastGetSetDCM::createSpeedWheelAlias()
   }
 }
 
-void FastGetSetDCM::prepareWheelsCommand(){
+void FastGetSetDCM::prepareWheelsCommand()
+{
   // prepare command
   wheelCommands.arraySetSize(6);
   wheelCommands[0] = std::string("wheelSpeed");
@@ -386,7 +383,7 @@ void FastGetSetDCM::prepareWheelsCommand(){
 
   wheelCommands[5].arraySetSize(robot_module.setWheelActuatorKeys.size());
 
-  for (int i=0; i<robot_module.setWheelActuatorKeys.size(); i++)
+  for (int i = 0; i < robot_module.setWheelActuatorKeys.size(); i++)
   {
     wheelCommands[5][i].arraySetSize(1);
   }
