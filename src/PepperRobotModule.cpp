@@ -75,8 +75,11 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
 
   for (unsigned i = 0; i < wheels.size(); ++i)
   {
-    setWheelStiffnessKeys.push_back("Device/SubDeviceList/" + wheels[i] + "/Stiffness/Actuator/Value");
-    setWheelActuatorKeys.push_back("Device/SubDeviceList/" + wheels[i] + "/Speed/Actuator/Value");
+    const std::string& wheel = wheels[i];
+    sensors.push_back("Encoder" + wheel);
+    setWheelStiffnessKeys.push_back("Device/SubDeviceList/" + wheel + "/Stiffness/Actuator/Value");
+    setWheelActuatorKeys.push_back("Device/SubDeviceList/" + wheel + "/Speed/Actuator/Value");
+    readSensorKeys.push_back("Device/SubDeviceList/" + wheel + "/Speed/Sensor/Value");
   }
 }
 
