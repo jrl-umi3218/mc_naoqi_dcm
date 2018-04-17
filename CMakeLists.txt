@@ -2,17 +2,20 @@
 ## Copyright (C) 2009 Aldebaran Robotics
 ##
 
-cmake_minimum_required(VERSION 2.6.4 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(fastgetsetdcm)
+set(ROBOT_NAME "pepper" CACHE STRING "Build with this robot (pepper|nao)")
+
 find_package(qibuild)
 
-set(_srcs
-    main.cpp
-    fastgetsetdcm.h
-    fastgetsetdcm.cpp
-)
+message(STATUS "Building with ${ROBOT_NAME} robot")
+if("${ROBOT_NAME}" STREQUAL "pepper")
+  add_definitions(-DPEPPER)
+elseif("${ROBOT_NAME}" STREQUAL "nao")
+  add_definitions(-DNAO)
+endif()
 
-qi_create_lib(fastgetsetdcm SHARED ${_srcs} SUBFOLDER naoqi)
-
-qi_use_lib(fastgetsetdcm ALCOMMON ALMEMORYFASTACCESS)
+include_directories(include)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
+add_subdirectory(src)
 
