@@ -110,7 +110,8 @@ class FastGetSetDCM : public AL::ALModule
    */
   void createAliasPrepareCommand(std::string aliasName,
                                  const std::vector<std::string> &mem_keys,
-                                 AL::ALValue& ledCommands);
+                                 AL::ALValue& ledCommands,
+                                 std::string updateType="ClearAll");
   // Create aliases for all leg groups defined in robot module
   // TODO: probably rename this function
   void createLedAliases();
@@ -137,9 +138,12 @@ class FastGetSetDCM : public AL::ALModule
 
   // one led set function for all groups
   void setLeds(std::string ledGroupName, const float &r, const float &g, const float &b);
+  void setLedsDelay(std::string ledGroupName, const float &r, const float &g, const float &b, const int& delay);
   // TODO: better implementation/naming for similar-functionality methods
   // cannot bind mathods with the same name and different arguments
   void isetLeds(std::string ledGroupName, const float &intensity);
+  // blink
+  void blink();
 
  private:
   // Used for postprocess sync with the DCM

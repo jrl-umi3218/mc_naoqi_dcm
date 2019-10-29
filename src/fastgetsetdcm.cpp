@@ -70,12 +70,16 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
   addParam("r", "red intensity %");
   addParam("g", "green intensity %");
   addParam("b", "blue intensity %");
+  addParam("delay", "delay in ms");
   BIND_METHOD(FastGetSetDCM::setLeds);
 
   functionName("isetLeds", getName(), "isetLeds");
   addParam("ledGroupName", "Name of the leds group from robot module");
   addParam("b", "blue intensity %");
   BIND_METHOD(FastGetSetDCM::isetLeds);
+
+  functionName("blink", getName(), "blink");
+  BIND_METHOD(FastGetSetDCM::blink); // bind makes methods accessible through proxies
 
   // XXX should be a compile-time check, but no C++11 support makes it tricky
   #if defined(PEPPER) || defined(NAO)
@@ -183,7 +187,8 @@ void FastGetSetDCM::initFastAccess(){
 
 
 void FastGetSetDCM::createAliasPrepareCommand(std::string aliasName,
-                const std::vector<std::string> &mem_keys, AL::ALValue& alias_command){
+                const std::vector<std::string> &mem_keys,
+                AL::ALValue& alias_command, std::string updateType){
 
   // create alias (unite group of memory keys under specific alis name)
   AL::ALValue alias;
@@ -208,7 +213,7 @@ void FastGetSetDCM::createAliasPrepareCommand(std::string aliasName,
   // prepare command for this alias to be set via DCM 'setAlias' call
   alias_command.arraySetSize(6);
   alias_command[0] = std::string(aliasName);
-  alias_command[1] = std::string("ClearAll");
+  alias_command[1] = std::string(updateType);
   alias_command[2] = std::string("time-separate");
   alias_command[3] = 0; // Importance level. Not yet implemented. Must be set to 0
   // placeholder for command time
@@ -232,9 +237,9 @@ void FastGetSetDCM::createLedAliases()
     std::string rName = leds.groupName+std::string("Red");
     std::string gName = leds.groupName+std::string("Green");
     std::string bName = leds.groupName+std::string("Blue");
-    createAliasPrepareCommand(rName, leds.redLedKeys, redLedCommands);
-    createAliasPrepareCommand(gName, leds.greenLedKeys, greenLedCommands);
-    createAliasPrepareCommand(bName, leds.blueLedKeys, blueLedCommands);
+    createAliasPrepareCommand(rName, leds.redLedKeys, redLedCommands, "Merge");
+    createAliasPrepareCommand(gName, leds.greenLedKeys, greenLedCommands, "Merge");
+    createAliasPrepareCommand(bName, leds.blueLedKeys, blueLedCommands, "Merge");
     // map led group name to led commands
     ledCmdMap[leds.groupName] = {redLedCommands, greenLedCommands, blueLedCommands};
   }
@@ -243,7 +248,7 @@ void FastGetSetDCM::createLedAliases()
   for(int i=0;i<robot_module.iLedGroups.size();i++){
     const iLedGroup& leds = robot_module.iLedGroups[i];
     AL::ALValue intensityLedCommands;
-    createAliasPrepareCommand(leds.groupName, leds.intensityLedKeys, intensityLedCommands);
+    createAliasPrepareCommand(leds.groupName, leds.intensityLedKeys, intensityLedCommands, "Merge");
     // map led group name to led commands
     ledCmdMap[leds.groupName] = {intensityLedCommands};
   }
@@ -304,7 +309,7 @@ void FastGetSetDCM::setStiffness(const float &stiffnessValue)
   jointStiffnessCommands[4][0] = DCMtime;
 
   for(int i=0;i<robot_module.actuators.size();i++){
-    jointStiffnessCommands[5][0][0] = stiffnessValue;
+    jointStiffnessCommands[5][i][0] = stiffnessValue;
   }
 
   try{
@@ -438,6 +443,41 @@ void FastGetSetDCM::setLeds(std::string ledGroupName, const float &r, const floa
   }
 }
 
+void FastGetSetDCM::setLedsDelay(std::string ledGroupName, const float &r, const float &g, const float &b, const int& delay)
+{
+  int DCMtime;
+  try{
+    DCMtime = dcmProxy->getTime(delay);
+  }catch (const AL::ALError &e){
+    throw ALERROR(getName(), "changeShouldersLeds()", "Error on DCM getTime : " + e.toString());
+  }
+
+  // TODO: proceed only if such led group exists!
+  std::vector<AL::ALValue> &rgbCmnds = ledCmdMap[ledGroupName];
+
+  qiLogInfo("rgbCmnds[0].getSize()") << rgbCmnds[0].getSize() << std::endl;
+  qiLogInfo("rgbCmnds[0][5].getSize()") << rgbCmnds[0][5].getSize() << std::endl;
+
+  rgbCmnds[0][4][0] = DCMtime;
+  rgbCmnds[1][4][0] = DCMtime;
+  rgbCmnds[2][4][0] = DCMtime;
+
+  // set RGB values for every memory key of this led group
+  for (int i = 0; i < rgbCmnds[0][5].getSize(); i++){
+    rgbCmnds[0][5][i][0] = r;
+    rgbCmnds[1][5][i][0] = g;
+    rgbCmnds[2][5][i][0] = b;
+  }
+
+  try{
+    dcmProxy->setAlias(rgbCmnds[0]);
+    dcmProxy->setAlias(rgbCmnds[1]);
+    dcmProxy->setAlias(rgbCmnds[2]);
+  }catch (const AL::ALError &e){
+    throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
+  }
+}
+
 void FastGetSetDCM::isetLeds(std::string ledGroupName, const float &intensity)
 {
   int DCMtime;
@@ -462,6 +502,16 @@ void FastGetSetDCM::isetLeds(std::string ledGroupName, const float &intensity)
   }catch (const AL::ALError &e){
     throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
   }
+}
+
+void FastGetSetDCM::blink()
+{
+  // This is possible because led aliases update type is "Merge"
+  setLedsDelay("eyesPeripheral", 0.0, 0.0, 0.0, 75);
+  setLedsDelay("eyesPeripheral", 0.0, 0.0, 0.0, 225);
+  setLedsDelay("eyesPeripheral", 1.0, 1.0, 1.0, 300);
+  setLedsDelay("eyesCenter", 0.0, 0.0, 0.0, 150);
+  setLedsDelay("eyesCenter", 1.0, 1.0, 1.0, 300);
 }
 
 } /* dcm_module */
