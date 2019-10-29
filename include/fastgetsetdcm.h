@@ -60,15 +60,6 @@ class FastGetSetDCM : public AL::ALModule
   */
   void synchronisedDCMcallback();
 
-  /*! Create DCM hardness Actuator Alias */
-  void createHardnessActuatorAlias();
-
-  /*! Create DCM Position Actuator Alias */
-  void createPositionActuatorAlias();
-
-  /*! Prepare Command ALValue to send command to actuator */
-  void preparePositionActuatorCommand();
-
   /**
    * @brief Set one hardness value to all joint
    *
@@ -115,24 +106,14 @@ class FastGetSetDCM : public AL::ALModule
   void sayText(const std::string &toSay);
 
   /**
-   * Create DCM Eye Led Alias
+   * Create DCM alias and prepare command (ALValue structure) for it
    */
-  void createLedAlias(std::string aliaseName, std::vector<std::string> keysVector);
+  void createAliasPrepareCommand(std::string aliasName,
+                                 const std::vector<std::string> &mem_keys,
+                                 AL::ALValue& ledCommands);
+  // Create aliases for all leg groups defined in robot module
+  // TODO: probably rename this function
   void createLedAliases();
-
-  /*! Prepare Command ALValue to send command to led */
-  void prepareLedCommand();
-
-  /**
-   * Change eye color
-   */
-  void changeLedColor(const float &r, const float &g, const float &b);
-
-  /*! Create DCM hardness wheel alias */
-  void createHardnessWheelAlias();
-
-  /*! Create DCM śpeed wheel alias */
-  void createSpeedWheelAlias();
 
   /**
    * @brief Set one hardness value to all wheels
@@ -154,8 +135,11 @@ class FastGetSetDCM : public AL::ALModule
    */
   void setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b);
 
-  /*! Prepare Command ALValue to send command to wheels */
-  void prepareWheelsCommand();
+  // one led set function for all groups
+  void setLeds(std::string ledGroupName, const float &r, const float &g, const float &b);
+  // TODO: better implementation/naming for similar-functionality methods
+  // cannot bind mathods with the same name and different arguments
+  void isetLeds(std::string ledGroupName, const float &intensity);
 
  private:
   // Used for postprocess sync with the DCM
@@ -168,23 +152,28 @@ class FastGetSetDCM : public AL::ALModule
   std::vector<float> sensorValues;
   boost::shared_ptr<AL::DCMProxy> dcmProxy;
 
-  // Used for the test actuator = sensor
+  // Used for sending joint position commands every 10ms in callback
+  // TODO: it probably makes sense to rename this variable to better reflect it's function
   std::vector<float> initialJointSensorValues;
 
-  // Used to store command to send
+  // Used to store joint possition command to set via DCM every 12ms
   AL::ALValue commands;
+
+  // joint stiffness command for DCM
+  AL::ALValue jointStiffnessCommands;
 
   /**
    * Store command to send to leds
    */
-  AL::ALValue redLedCommands;
-  AL::ALValue greenLedCommands;
-  AL::ALValue blueLedCommands;
+
+  // map led group name to corresponding RGB or intensity commands
+  std::map<std::string, std::vector<AL::ALValue>> ledCmdMap;
 
   /**
-   * Store commands to send to wheels
+   * Store commands to send to wheels (speed and stiffness)
    */
-  AL::ALValue wheelCommands;
+  AL::ALValue wheelsCommands;
+  AL::ALValue wheelsStiffnessCommands;
 
   /**
    * \brief The RobotModule describes the sensors names and their corresponding
@@ -192,6 +181,12 @@ class FastGetSetDCM : public AL::ALModule
    * PEPPER robots.
    */
   RobotModule robot_module;
+
+  /**
+   * Total number of sensors to be read from the memeory
+   * Allows to pre-set apropriate vector size for storing and updating all sensor readings
+   */
+  int numSensors() const;
 };
 
 } /* dcm_module */

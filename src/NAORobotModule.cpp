@@ -8,108 +8,57 @@ NAORobotModule::NAORobotModule()
 {
   name = "nao";
 
-  // Joints Sensor list
-  actuators.push_back("HeadPitch");
-  actuators.push_back("HeadYaw");
-  actuators.push_back("LAnklePitch");
-  actuators.push_back("LAnkleRoll");
-  actuators.push_back("LElbowRoll");
-  actuators.push_back("LElbowYaw");
-  actuators.push_back("LHand");
-  actuators.push_back("LHipPitch");
-  actuators.push_back("LHipRoll");
-  actuators.push_back("LHipYawPitch");
-  actuators.push_back("LKneePitch");
-  actuators.push_back("LShoulderPitch");
-  actuators.push_back("LShoulderRoll");
-  actuators.push_back("LWristYaw");
-  actuators.push_back("RAnklePitch");
-  actuators.push_back("RAnkleRoll");
-  actuators.push_back("RElbowRoll");
-  actuators.push_back("RElbowYaw");
-  actuators.push_back("RHand");
-  actuators.push_back("RHipPitch");
-  actuators.push_back("RHipRoll");
-  actuators.push_back("RKneePitch");
-  actuators.push_back("RShoulderPitch");
-  actuators.push_back("RShoulderRoll");
-  actuators.push_back("RWristYaw");
+  // body joints
+  actuators = {"HeadPitch", "HeadYaw", "LAnklePitch", "LAnkleRoll",
+               "LElbowRoll",  "LElbowYaw","LHand", "LHipPitch", "LHipRoll",
+               "LHipYawPitch",  "LKneePitch", "LShoulderPitch", "LShoulderRoll",
+               "LWristYaw", "RAnklePitch", "RAnkleRoll", "RElbowRoll", "RElbowYaw",
+               "RHand", "RHipPitch", "RHipRoll", "RKneePitch", "RShoulderPitch",
+               "RShoulderRoll", "RWristYaw"};
 
-  for (unsigned i = 0; i < actuators.size(); ++i)
-  {
-    const std::string& actuator = actuators[i];
-    sensors.push_back("Encoder" + actuator);
-    setActuatorKeys.push_back("Device/SubDeviceList/" + actuator + "/Position/Actuator/Value");
-    setHardnessKeys.push_back("Device/SubDeviceList/" + actuator + "/Hardness/Actuator/Value");
-    readSensorKeys.push_back("Device/SubDeviceList/" + actuator + "/Position/Sensor/Value");
+  // generate memory keys for sending commands to the joints (position/stiffness)
+  genMemoryKeys("", actuators, "/Position/Actuator/Value", setActuatorKeys);
+  genMemoryKeys("", actuators, "/Hardness/Actuator/Value", setHardnessKeys);
+
+  // generate memory keys for reading sensor values
+  // NB! Joint encoders must be in the beginning of the readSensorKeys/sensors
+  genMemoryKeys("", actuators, "/Position/Sensor/Value", readSensorKeys, true, "Encoder");
+  genMemoryKeys("", actuators, "/ElectricCurrent/Sensor/Value", readSensorKeys, true, "ElectricCurrent");
+  genMemoryKeys("InertialSensor/", imu, "/Sensor/Value", readSensorKeys, true, "");
+  // Force Sensitive Resistors of the feet
+  std::vector<std::string> footFSR = {"FrontLeft", "FrontRight", "RearLeft", "RearRight",
+                                      "TotalWeight", "CenterOfPressure/X", "CenterOfPressure/Y"};
+  genMemoryKeys("LFoot/", footFSR, "/Sensor/Value", readSensorKeys, true, "LFoot");
+  genMemoryKeys("RFoot/", footFSR, "/Sensor/Value", readSensorKeys, true, "RFoot");
+
+  // led groups
+  rgbLedGroup eyesLeds;
+  eyesLeds.groupName = "eyesLeds";
+  unsigned numEyeLeds = 8;
+  unsigned eyeLedAngleStep = 45;
+  // generate memory keys for changing color of all eyes leds
+  for (unsigned i = 0; i < numEyeLeds; i++){
+    eyesLeds.ledNames.push_back("Right/" + std::to_string(i*eyeLedAngleStep) + "Deg");
+    eyesLeds.ledNames.push_back("Left/" + std::to_string(i*eyeLedAngleStep) + "Deg");
   }
+  genMemoryKeys("Face/Led/Red/", eyesLeds.ledNames, "/Actuator/Value", eyesLeds.redLedKeys);
+  genMemoryKeys("Face/Led/Green/", eyesLeds.ledNames, "/Actuator/Value", eyesLeds.greenLedKeys);
+  genMemoryKeys("Face/Led/Blue/", eyesLeds.ledNames, "/Actuator/Value", eyesLeds.blueLedKeys);
+  rgbLedGroups.push_back(eyesLeds);
 
-  // Inertial sensors
-  sensors.push_back("AccelerometerX");
-  sensors.push_back("AccelerometerY");
-  sensors.push_back("AccelerometerZ");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AccelerometerX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AccelerometerY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AccelerometerZ/Sensor/Value");
-
-  sensors.push_back("GyroscopeX");
-  sensors.push_back("GyroscopeY");
-  sensors.push_back("GyroscopeZ");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/GyroscopeX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/GyroscopeY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/GyroscopeZ/Sensor/Value");
-
-  sensors.push_back("AngleX");
-  sensors.push_back("AngleY");
-  sensors.push_back("AngleZ");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AngleX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AngleY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensor/AngleZ/Sensor/Value");
-
-  sensors.push_back("LF_FSR_FrontLeft");
-  sensors.push_back("LF_FSR_FrontRight");
-  sensors.push_back("LF_FSR_RearLeft");
-  sensors.push_back("LF_FSR_RearRight");
-  sensors.push_back("RF_FSR_FrontLeft");
-  sensors.push_back("RF_FSR_FrontRight");
-  sensors.push_back("RF_FSR_RearLeft");
-  sensors.push_back("RF_FSR_RearRight");
-  sensors.push_back("LF_FSR_TotalWeight");
-  sensors.push_back("RF_FSR_TotalWeight");
-  readSensorKeys.push_back("Device/SubDeviceList/LFoot/FSR/FrontLeft/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/LFoot/FSR/FrontRight/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/LFoot/FSR/RearLeft/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/LFoot/FSR/RearRight/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/FrontLeft/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/FrontRight/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/RearLeft/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/RearRight/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/LFoot/FSR/TotalWeight/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/TotalWeight/Sensor/Value");
-
-  // Some FSR sensors
-  sensors.push_back("LF_FSR_COP_X");
-  sensors.push_back("LF_FSR_COP_Y");
-  sensors.push_back("RF_FSR_COP_X");
-  sensors.push_back("RF_FSR_COP_Y");
-  readSensorKeys.push_back("Device/SubDeviceList/LFoot/FSR/CenterOfPressure/X/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/LFoot/FSR/CenterOfPressure/Y/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/CenterOfPressure/X/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/RFoot/FSR/CenterOfPressure/Y/Sensor/Value");
-
-  // Leds
-  leds.push_back("Left/45Deg");
-  leds.push_back("Left/90Deg");
-  leds.push_back("Right/0Deg");
-  leds.push_back("Right/45Deg");
-
-  for (unsigned i = 0; i < leds.size(); ++i)
-  {
-    const std::string& led = leds[i];
-    setRedLedKeys.push_back("Device/SubDeviceList/Face/Led/Red/" + led + "/Actuator/Value");
-    setGreenLedKeys.push_back("Device/SubDeviceList/Face/Led/Green/" + led + "/Actuator/Value");
-    setBlueLedKeys.push_back("Device/SubDeviceList/Face/Led/Blue/" + led + "/Actuator/Value");
+  rgbLedGroup earsLeds;
+  earsLeds.groupName = "earsLeds";
+  unsigned numEarLeds = 10;
+  unsigned earLedAngleStep = 36;
+  // generate memory keys for changing color of all ear leds
+  for (unsigned i = 0; i < numEarLeds; i++){
+    earsLeds.ledNames.push_back("Right/" + std::to_string(i*earLedAngleStep) + "Deg");
+    earsLeds.ledNames.push_back("Left/" + std::to_string(i*earLedAngleStep) + "Deg");
   }
+  genMemoryKeys("Face/Led/Red/", earsLeds.ledNames, "/Actuator/Value", earsLeds.redLedKeys);
+  genMemoryKeys("Face/Led/Green/", earsLeds.ledNames, "/Actuator/Value", earsLeds.greenLedKeys);
+  genMemoryKeys("Face/Led/Blue/", earsLeds.ledNames, "/Actuator/Value", earsLeds.blueLedKeys);
+  rgbLedGroups.push_back(earsLeds);
 }
 
 } /* dcm_module */

@@ -1,4 +1,4 @@
-/// Module to use fast method to get/set joints every 10ms with minimum delays.
+/// Module to use fast method to get/set joints every 12ms with minimum delays.
 /// Implemented for both NAO and PEPPER robots.
 
 #include "fastgetsetdcm.h"
@@ -28,7 +28,7 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
                              const std::string &name)
     : AL::ALModule(broker, name), fMemoryFastAccess(boost::shared_ptr<AL::ALMemoryFastAccess>(new AL::ALMemoryFastAccess()))
 {
-  setModuleDescription("Example module to use fast method to get/set joints every 10ms with minimum delays.");
+  setModuleDescription("Module to use fast method to get/set joints every 12ms with minimum delays.");
 
   functionName("startLoop", getName(), "start");
   BIND_METHOD(FastGetSetDCM::startLoop);
@@ -36,23 +36,26 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
   functionName("stopLoop", getName(), "stop");
   BIND_METHOD(FastGetSetDCM::stopLoop);
 
-  functionName("setStiffness", getName(),
-               "change stiffness of all joint");
+  functionName("setStiffness", getName(), "change stiffness of all joint");
   addParam("value", "new stiffness value from 0.0 to 1.0");
   BIND_METHOD(FastGetSetDCM::setStiffness);
 
-  functionName("setJointAngles", getName(),
-               "set joint angles");
+  functionName("setJointAngles", getName(), "set joint angles");
   addParam("values", "new joint angles (in radian)");
   BIND_METHOD(FastGetSetDCM::setJointAngles);
 
   functionName("getJointOrder", getName(), "get reference joint order");
   setReturn("joint order", "array containing joint order");
   BIND_METHOD(FastGetSetDCM::getJointOrder);
+  // TODO: m_controller.robot().refJointOrder() == dcm.robot_module.getJointOrder()
 
   functionName("getSensorsOrder", getName(), "get names for each sensor index");
   setReturn("sensor names", "array containing namess of all the sensors");
   BIND_METHOD(FastGetSetDCM::getSensorsOrder);
+
+  functionName("numSensors", getName(), "get total number of sensors");
+  setReturn("sensors number", "int indicating total number of different sensors");
+  BIND_METHOD(FastGetSetDCM::numSensors);
 
   functionName("getSensors", getName(), "get all sensor values");
   setReturn("sensor values", "array containing values of all the sensors");
@@ -62,36 +65,40 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
   addParam("toSay", "The sentence to be said.");
   BIND_METHOD(FastGetSetDCM::sayText);
 
-  functionName("changeLedColor", getName(), "changeLedColor");
+  functionName("setLeds", getName(), "setLeds");
+  addParam("ledGroupName", "Name of the leds group from robot module");
   addParam("r", "red intensity %");
   addParam("g", "green intensity %");
   addParam("b", "blue intensity %");
-  BIND_METHOD(FastGetSetDCM::changeLedColor);
+  BIND_METHOD(FastGetSetDCM::setLeds);
 
-// XXX should be a compile-time check, but no C++11 support makes it tricky
-#if defined(PEPPER) || defined(NAO)
-#else
-#error "Only PEPPER and NAO robots are supported"
-#endif
+  functionName("isetLeds", getName(), "isetLeds");
+  addParam("ledGroupName", "Name of the leds group from robot module");
+  addParam("b", "blue intensity %");
+  BIND_METHOD(FastGetSetDCM::isetLeds);
 
-#ifdef PEPPER
+  // XXX should be a compile-time check, but no C++11 support makes it tricky
+  #if defined(PEPPER) || defined(NAO)
+  #else
+  #error "Only PEPPER and NAO robots are supported"
+  #endif
 
-  functionName("setWheelsStiffness", getName(),
-               "change stiffness of all wheels imediately");
-  addParam("value", "new stiffness value from 0.0 to 1.0");
-  BIND_METHOD(FastGetSetDCM::setWheelsStiffness);
+  #ifdef PEPPER
 
-  functionName("setWheelSpeed", getName(),
-               "change wheel speed");
-  addParam("speed_fl", "new speed");
-  addParam("speed_fr", "new speed");
-  addParam("speed_b", "new speed");
-  BIND_METHOD(FastGetSetDCM::setWheelSpeed);
+    functionName("setWheelsStiffness", getName(), "change wheels stiffness");
+    addParam("value", "new stiffness value from 0.0 to 1.0");
+    BIND_METHOD(FastGetSetDCM::setWheelsStiffness);
 
-  robot_module = PepperRobotModule();
-#else
-  robot_module = NAORobotModule();
-#endif
+    functionName("setWheelSpeed", getName(), "change wheel speed");
+    addParam("speed_fl", "front left wheel speed");
+    addParam("speed_fr", "front right wheel speed");
+    addParam("speed_b", "back wheel speed");
+    BIND_METHOD(FastGetSetDCM::setWheelSpeed);
+
+    robot_module = PepperRobotModule();
+  #else
+    robot_module = NAORobotModule();
+  #endif
 
   startLoop();
 }
@@ -101,320 +108,164 @@ FastGetSetDCM::~FastGetSetDCM()
   stopLoop();
 }
 
-void FastGetSetDCM::sayText(const std::string &toSay)
-{
-  try
-  {
-    /** Create a proxy to TTS.*/
-    AL::ALTextToSpeechProxy tts(getParentBroker());
-    /** Call the say method. */
-    tts.say(toSay);
-    /** Note: on the desktop you won't hear anything, but you should see
-    * some logs on the naoqi you are connected to. */
-  }
-  catch (const AL::ALError &)
-  {
-    qiLogError("module.example") << "Could not get proxy to ALTextToSpeech" << std::endl;
-  }
-}
-
-void FastGetSetDCM::changeLedColor(const float &r, const float &g, const float &b)
-{
-  int DCMtime;
-  try
-  {
-    DCMtime = dcmProxy->getTime(0);
-  }
-  catch (const AL::ALError &e)
-  {
-    throw ALERROR(getName(), "changeLedColor()", "Error on DCM getTime : " + e.toString());
-  }
-
-  redLedCommands[4][0] = DCMtime;
-
-  for (int i = 0; i < robot_module.setRedLedKeys.size(); i++)
-  {
-    redLedCommands[5][i][0] = r;
-  }
-
-  greenLedCommands[4][0] = DCMtime;
-
-  for (int i = 0; i < robot_module.setGreenLedKeys.size(); i++)
-  {
-    greenLedCommands[5][i][0] = g;
-  }
-
-  blueLedCommands[4][0] = DCMtime;
-
-  for (int i = 0; i < robot_module.setBlueLedKeys.size(); i++)
-  {
-    blueLedCommands[5][i][0] = b;
-  }
-
-  try
-  {
-    dcmProxy->setAlias(redLedCommands);
-    dcmProxy->setAlias(greenLedCommands);
-    dcmProxy->setAlias(blueLedCommands);
-  }
-  catch (const AL::ALError &e)
-  {
-    throw ALERROR(getName(), "changeLedColor()", "Error when sending command to DCM : " + e.toString());
-  }
-}
-
-// Start the example
+// Start loop
 void FastGetSetDCM::startLoop()
 {
   signed long isDCMRunning;
 
-  try
-  {
-    // Get the DCM proxy
+  // Get the DCM proxy
+  try{
     dcmProxy = getParentBroker()->getDcmProxy();
-  }
-  catch (AL::ALError &e)
-  {
+  }catch (AL::ALError &e){
     throw ALERROR(getName(), "startLoop()", "Impossible to create DCM Proxy : " + e.toString());
   }
 
   // Is the DCM running ?
-  try
-  {
+  try{
     isDCMRunning = getParentBroker()->getProxy("ALLauncher")->call<bool>("isModulePresent", std::string("DCM"));
-  }
-  catch (AL::ALError &e)
+  }catch (AL::ALError &e)
   {
     throw ALERROR(getName(), "startLoop()", "Error when connecting to DCM : " + e.toString());
   }
 
-  if (!isDCMRunning)
-  {
+  if (!isDCMRunning){
     throw ALERROR(getName(), "startLoop()", "Error no DCM running ");
   }
 
+  // initialize sensor reading/setting
   init();
+
+  // read current joint sensor values (fill 'initialJointSensorValues')
+  // connect a joint updater from 'initialJointSensorValues' to DCM loop (every 12ms)
   connectToDCMloop();
 }
 
+
 void FastGetSetDCM::stopLoop()
 {
+  setWheelSpeed(0.0f, 0.0f, 0.0f);
   setStiffness(0.0f);
+  setWheelsStiffness(0.0f);
   // Remove the postProcess call back connection
   fDCMPostProcessConnection.disconnect();
 }
 
+
 void FastGetSetDCM::init()
 {
+  // Enable fast access of all robot_module.readSensorKeys from memory
   initFastAccess();
-  createPositionActuatorAlias();
-  createHardnessActuatorAlias();
+  // create 'jointActuator' alias to be used for sending joint possition commands
+  createAliasPrepareCommand("jointActuator", robot_module.setActuatorKeys, commands);
+  // create 'jointStiffness' alias to be used for setting joint stiffness commands
+  createAliasPrepareCommand("jointStiffness", robot_module.setHardnessKeys, jointStiffnessCommands);
+  // keep body joints turned off at initialization
   setStiffness(0.0f);
-  preparePositionActuatorCommand();
+  // prepare commands for all led groups of robot_module
   createLedAliases();
-  prepareLedCommand();
 
-#ifdef PEPPER
-  createHardnessWheelAlias();
-  createSpeedWheelAlias();
-  setWheelsStiffness(0.0f);
-  prepareWheelsCommand();
-#endif
+  #ifdef PEPPER
+    // create wheels speed and stiffness commands
+    const JointGroup& wheels = robot_module.specialJointGroups[0];
+    std::string wheelsSpeedAliasName = wheels.groupName+std::string("Speed");
+    std::string wheelsStiffnessAliasName = wheels.groupName+std::string("Stiffness");
+    createAliasPrepareCommand(wheelsSpeedAliasName, wheels.setActuatorKeys, wheelsCommands);
+    createAliasPrepareCommand(wheelsStiffnessAliasName, wheels.setHardnessKeys, wheelsStiffnessCommands);
+    // keep wheels turned off at initialization
+    setWheelsStiffness(0.0f);
+  #endif
 }
 
-void FastGetSetDCM::initFastAccess()
-{
-  // Create the fast memory access
+void FastGetSetDCM::initFastAccess(){
+  // Create the fast memory access to read sensor values
   fMemoryFastAccess->ConnectToVariables(getParentBroker(), robot_module.readSensorKeys, false);
 }
 
-void FastGetSetDCM::createPositionActuatorAlias()
-{
-  AL::ALValue jointAliasses;
 
-  jointAliasses.arraySetSize(2);
-  jointAliasses[0] = std::string("jointActuator");  // Alias for all actuators position
-  jointAliasses[1].arraySetSize(robot_module.setActuatorKeys.size());
+void FastGetSetDCM::createAliasPrepareCommand(std::string aliasName,
+                const std::vector<std::string> &mem_keys, AL::ALValue& alias_command){
 
-  // Joints actuator list
-  for (unsigned i = 0; i < robot_module.setActuatorKeys.size(); ++i)
-  {
-    jointAliasses[1][i] = robot_module.setActuatorKeys[i];
+  // create alias (unite group of memory keys under specific alis name)
+  AL::ALValue alias;
+  // 2 - for alias name and array of alias memory keys
+  alias.arraySetSize(2);
+  alias[0] = std::string(aliasName);
+  alias[1].arraySetSize(mem_keys.size());
+
+  // fill in array of memory keys of the alias
+  for (unsigned i = 0; i < mem_keys.size(); ++i){
+    alias[1][i] = mem_keys[i];
   }
 
-  // Create alias
-  try
-  {
-    dcmProxy->createAlias(jointAliasses);
-  }
-  catch (const AL::ALError &e)
-  {
-    throw ALERROR(getName(), "createPositionActuatorAlias()", "Error when creating Alias : " + e.toString());
-  }
-}
-
-void FastGetSetDCM::createLedAlias(std::string aliaseName, std::vector<std::string> keysVector)
-{
-  AL::ALValue ledAliasses;
-
-  ledAliasses.arraySetSize(2);
-  ledAliasses[0] = std::string(aliaseName);
-  ledAliasses[1].arraySetSize(keysVector.size());
-
-  // Led list
-  for (unsigned i = 0; i < keysVector.size(); ++i)
-  {
-    ledAliasses[1][i] = keysVector[i];
-  }
-
-  // Create alias
-  try
-  {
-    dcmProxy->createAlias(ledAliasses);
-  }
-  catch (const AL::ALError &e)
-  {
+  // Create alias in DCM
+  try{
+    dcmProxy->createAlias(alias);
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "createLedAlias()", "Error when creating Alias : " + e.toString());
   }
-}
 
-void FastGetSetDCM::prepareLedCommand()
-{
-  redLedCommands.arraySetSize(6);
-  redLedCommands[0] = std::string("redLed");
-  redLedCommands[1] = std::string("ClearAll");
-  redLedCommands[2] = std::string("time-separate");
-  redLedCommands[3] = 0;
-  redLedCommands[4].arraySetSize(1);
-  redLedCommands[5].arraySetSize(robot_module.setRedLedKeys.size());
-
-  greenLedCommands.arraySetSize(6);
-  greenLedCommands[0] = std::string("greenLed");
-  greenLedCommands[1] = std::string("ClearAll");
-  greenLedCommands[2] = std::string("time-separate");
-  greenLedCommands[3] = 0;
-  greenLedCommands[4].arraySetSize(1);
-  greenLedCommands[5].arraySetSize(robot_module.setGreenLedKeys.size());
-
-  blueLedCommands.arraySetSize(6);
-  blueLedCommands[0] = std::string("blueLed");
-  blueLedCommands[1] = std::string("ClearAll");
-  blueLedCommands[2] = std::string("time-separate");
-  blueLedCommands[3] = 0;
-  blueLedCommands[4].arraySetSize(1);
-  blueLedCommands[5].arraySetSize(robot_module.setBlueLedKeys.size());
-
-  for (int i = 0; i < robot_module.setRedLedKeys.size(); i++)
-  {
-    redLedCommands[5][i].arraySetSize(1);
-    greenLedCommands[5][i].arraySetSize(1);
-    blueLedCommands[5][i].arraySetSize(1);
+  // alias created succesfully
+  // prepare command for this alias to be set via DCM 'setAlias' call
+  alias_command.arraySetSize(6);
+  alias_command[0] = std::string(aliasName);
+  alias_command[1] = std::string("ClearAll");
+  alias_command[2] = std::string("time-separate");
+  alias_command[3] = 0; // Importance level. Not yet implemented. Must be set to 0
+  // placeholder for command time
+  alias_command[4].arraySetSize(1);
+  // placeholder for command values
+  alias_command[5].arraySetSize(mem_keys.size());
+  for (int i = 0; i < mem_keys.size(); i++){
+    // allocate space for a new value for a memory key to be set via setAlias call
+    alias_command[5][i].arraySetSize(1);
   }
 }
 
 void FastGetSetDCM::createLedAliases()
 {
-  createLedAlias("redLed", robot_module.setRedLedKeys);
-  createLedAlias("greenLed", robot_module.setGreenLedKeys);
-  createLedAlias("blueLed", robot_module.setBlueLedKeys);
-}
-
-void FastGetSetDCM::createHardnessWheelAlias()
-{
-  AL::ALValue jointAliasses;
-  // Alias for all joint stiffness
-  jointAliasses.clear();
-  jointAliasses.arraySetSize(2);
-  jointAliasses[0] = std::string("wheelStiffness");
-  jointAliasses[1].arraySetSize(robot_module.setWheelStiffnessKeys.size());
-
-  // stiffness list
-  for (unsigned i = 0; i < robot_module.setWheelStiffnessKeys.size(); ++i)
-  {
-    jointAliasses[1][i] = robot_module.setWheelStiffnessKeys[i];
+  // RGB led groups
+  for(int i=0;i<robot_module.rgbLedGroups.size();i++){
+    const rgbLedGroup& leds = robot_module.rgbLedGroups[i];
+    AL::ALValue redLedCommands;
+    AL::ALValue greenLedCommands;
+    AL::ALValue blueLedCommands;
+    std::string rName = leds.groupName+std::string("Red");
+    std::string gName = leds.groupName+std::string("Green");
+    std::string bName = leds.groupName+std::string("Blue");
+    createAliasPrepareCommand(rName, leds.redLedKeys, redLedCommands);
+    createAliasPrepareCommand(gName, leds.greenLedKeys, greenLedCommands);
+    createAliasPrepareCommand(bName, leds.blueLedKeys, blueLedCommands);
+    // map led group name to led commands
+    ledCmdMap[leds.groupName] = {redLedCommands, greenLedCommands, blueLedCommands};
   }
 
-  // Create alias
-  try
-  {
-    dcmProxy->createAlias(jointAliasses);
-  }
-  catch (const AL::ALError &e)
-  {
-    throw ALERROR(getName(), "createHardnessWheelAlias()", "Error when creating Alias : " + e.toString());
-  }
-}
-
-void FastGetSetDCM::createSpeedWheelAlias()
-{
-  AL::ALValue jointAliasses;
-
-  jointAliasses.arraySetSize(2);
-  jointAliasses[0] = std::string("wheelSpeed");
-  jointAliasses[1].arraySetSize(robot_module.setWheelActuatorKeys.size());
-
-  // Joints actuator list
-  for (unsigned i = 0; i < robot_module.setWheelActuatorKeys.size(); ++i)
-  {
-    jointAliasses[1][i] = robot_module.setWheelActuatorKeys[i];
-  }
-
-  // Create alias
-  try
-  {
-    dcmProxy->createAlias(jointAliasses);
-  }
-  catch (const AL::ALError &e)
-  {
-    throw ALERROR(getName(), "createSpeedWheelAlias()", "Error when creating Alias : " + e.toString());
-  }
-}
-
-void FastGetSetDCM::prepareWheelsCommand()
-{
-  // prepare command
-  wheelCommands.arraySetSize(6);
-  wheelCommands[0] = std::string("wheelSpeed");
-  wheelCommands[1] = std::string("ClearAll");
-  wheelCommands[2] = std::string("time-separate");
-  wheelCommands[3] = 0;
-
-  wheelCommands[4].arraySetSize(1);
-
-  wheelCommands[5].arraySetSize(robot_module.setWheelActuatorKeys.size());
-
-  for (int i = 0; i < robot_module.setWheelActuatorKeys.size(); i++)
-  {
-    wheelCommands[5][i].arraySetSize(1);
+  // Single channel led groups
+  for(int i=0;i<robot_module.iLedGroups.size();i++){
+    const iLedGroup& leds = robot_module.iLedGroups[i];
+    AL::ALValue intensityLedCommands;
+    createAliasPrepareCommand(leds.groupName, leds.intensityLedKeys, intensityLedCommands);
+    // map led group name to led commands
+    ledCmdMap[leds.groupName] = {intensityLedCommands};
   }
 }
 
 void FastGetSetDCM::setWheelsStiffness(const float &stiffnessValue)
 {
-  AL::ALValue stiffnessCommands;
   int DCMtime;
-  try
-  {
+  try{
     DCMtime = dcmProxy->getTime(0);
-  }
-  catch (const AL::ALError &e)
-  {
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "setStiffness()", "Error on DCM getTime : " + e.toString());
   }
 
-  stiffnessCommands.arraySetSize(3);
-  stiffnessCommands[0] = std::string("wheelStiffness");
-  stiffnessCommands[1] = std::string("Merge");
-  stiffnessCommands[2].arraySetSize(1);
-  stiffnessCommands[2][0].arraySetSize(2);
-  stiffnessCommands[2][0][0] = stiffnessValue;
-  stiffnessCommands[2][0][1] = DCMtime;
-  try
-  {
-    dcmProxy->set(stiffnessCommands);
-  }
-  catch (const AL::ALError &e)
-  {
+  wheelsStiffnessCommands[4][0] = DCMtime;
+  wheelsStiffnessCommands[5][0][0] = stiffnessValue;
+  wheelsStiffnessCommands[5][1][0] = stiffnessValue;
+  wheelsStiffnessCommands[5][2][0] = stiffnessValue;
+
+  try  {
+    dcmProxy->setAlias(wheelsStiffnessCommands);
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "setWheelsStiffness()", "Error when sending stiffness to DCM : " + e.toString());
   }
 }
@@ -422,112 +273,50 @@ void FastGetSetDCM::setWheelsStiffness(const float &stiffnessValue)
 void FastGetSetDCM::setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b)
 {
   int DCMtime;
-
-  try
-  {
+  try{
     DCMtime = dcmProxy->getTime(0);
-  }
-  catch (const AL::ALError &e)
-  {
+  }catch (const AL::ALError &e)  {
     throw ALERROR(getName(), "setWheelSpeed()", "Error on DCM getTime : " + e.toString());
   }
 
-  wheelCommands[4][0] = DCMtime;
-  wheelCommands[5][0][0] = speed_fl;
-  wheelCommands[5][1][0] = speed_fr;
-  wheelCommands[5][2][0] = speed_b;
+  wheelsCommands[4][0] = DCMtime;
+  wheelsCommands[5][0][0] = speed_fl;
+  wheelsCommands[5][1][0] = speed_fr;
+  wheelsCommands[5][2][0] = speed_b;
 
-  try
-  {
-    dcmProxy->setAlias(wheelCommands);
-  }
-  catch (const AL::ALError &e)
-  {
+  try{
+    dcmProxy->setAlias(wheelsCommands);
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "setWheelSpeed()", "Error when sending command to DCM : " + e.toString());
-  }
-}
-
-void FastGetSetDCM::createHardnessActuatorAlias()
-{
-  AL::ALValue jointAliasses;
-  // Alias for all joint stiffness
-  jointAliasses.clear();
-  jointAliasses.arraySetSize(2);
-  jointAliasses[0] = std::string("jointStiffness");  // Alias for all actuators stiffness
-  jointAliasses[1].arraySetSize(robot_module.setHardnessKeys.size());
-
-  // stiffness list
-  for (unsigned i = 0; i < robot_module.setHardnessKeys.size(); ++i)
-  {
-    jointAliasses[1][i] = robot_module.setHardnessKeys[i];
-  }
-
-  // Create alias
-  try
-  {
-    dcmProxy->createAlias(jointAliasses);
-  }
-  catch (const AL::ALError &e)
-  {
-    throw ALERROR(getName(), "createHardnessActuatorAlias()", "Error when creating Alias : " + e.toString());
-  }
-}
-
-void FastGetSetDCM::preparePositionActuatorCommand()
-{
-  commands.arraySetSize(6);
-  commands[0] = std::string("jointActuator");
-  commands[1] = std::string("ClearAll");  // Erase all previous commands
-  commands[2] = std::string("time-separate");
-  commands[3] = 0;
-
-  commands[4].arraySetSize(1);
-  //commands[4][0]  Will be the new time
-
-  commands[5].arraySetSize(robot_module.setActuatorKeys.size());  // For all joints
-  for (unsigned i = 0; i < robot_module.setActuatorKeys.size(); i++)
-  {
-    commands[5][i].arraySetSize(1);
-    //commands[5][i][0] will be the new angle
   }
 }
 
 void FastGetSetDCM::setStiffness(const float &stiffnessValue)
 {
-  AL::ALValue stiffnessCommands;
   int DCMtime;
   // increase stiffness with the "jointStiffness" Alias created at initialisation
-  try
-  {
+  try{
     DCMtime = dcmProxy->getTime(0);
-  }
-  catch (const AL::ALError &e)
-  {
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "setStiffness()", "Error on DCM getTime : " + e.toString());
   }
 
-  // Prepare one dcm command:
-  // it will linearly "Merge" all joint stiffness
-  // from last value to "stiffnessValue" in 1 seconde
-  stiffnessCommands.arraySetSize(3);
-  stiffnessCommands[0] = std::string("jointStiffness");
-  stiffnessCommands[1] = std::string("ClearAll");
-  stiffnessCommands[2].arraySetSize(1);
-  stiffnessCommands[2][0].arraySetSize(2);
-  stiffnessCommands[2][0][0] = stiffnessValue;
-  stiffnessCommands[2][0][1] = DCMtime;
-  try
-  {
-    dcmProxy->set(stiffnessCommands);
+  jointStiffnessCommands[4][0] = DCMtime;
+
+  for(int i=0;i<robot_module.actuators.size();i++){
+    jointStiffnessCommands[5][0][0] = stiffnessValue;
   }
-  catch (const AL::ALError &e)
-  {
+
+  try{
+    dcmProxy->setAlias(jointStiffnessCommands);
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "setStiffness()", "Error when sending stiffness to DCM : " + e.toString());
   }
 }
 
 void FastGetSetDCM::setJointAngles(std::vector<float> jointValues)
 {
+  // update values in the vector that is used to send joint commands every 12ms
   initialJointSensorValues = jointValues;
 }
 
@@ -539,6 +328,11 @@ std::vector<std::string> FastGetSetDCM::getJointOrder() const
 std::vector<std::string> FastGetSetDCM::getSensorsOrder() const
 {
   return robot_module.sensors;
+}
+
+int FastGetSetDCM::numSensors() const
+{
+  return robot_module.readSensorKeys.size();
 }
 
 std::vector<float> FastGetSetDCM::getSensors()
@@ -553,55 +347,120 @@ void FastGetSetDCM::connectToDCMloop()
   // Get all values from ALMemory using fastaccess
   fMemoryFastAccess->GetValues(sensorValues);
 
-  // Save all sensor position for the sensor=actuator test
-  for (int i = 0; i < 17; i++)
-  {
+  // Save initial sensor values into 'initialJointSensorValues'
+  for (int i = 0; i < robot_module.actuators.size(); i++){
     initialJointSensorValues.push_back(sensorValues[i]);
   }
 
   // Connect callback to the DCM post proccess
-  try
-  {
+  try{
     //  onPreProcess is useful because it’s called just before the computation of orders sent to the chestboard (USB). Sending commands at this level means that you have the shortest delay to your command.
     fDCMPostProcessConnection =
         getParentBroker()->getProxy("DCM")->getModule()->atPreProcess(boost::bind(&FastGetSetDCM::synchronisedDCMcallback, this));
-  }
-  catch (const AL::ALError &e)
-  {
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "connectToDCMloop()", "Error when connecting to DCM postProccess: " + e.toString());
   }
 }
 
+
+// using 'jointActuator' alias created 'command'
+// that will use data from 'initialJointSensorValues' to send it to DCM every 12 ms
 void FastGetSetDCM::synchronisedDCMcallback()
 {
   int DCMtime;
 
-  try
-  {
+  try{
     // Get absolute time, at 0 ms in the future ( i.e. now )
     DCMtime = dcmProxy->getTime(0);
-  }
-  catch (const AL::ALError &e)
-  {
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "synchronisedDCMcallback()", "Error on DCM getTime : " + e.toString());
   }
 
-  commands[4][0] = DCMtime;  // To be used in the next cycle
+  commands[4][0] = DCMtime;
 
   // XXX make this faster with memcpy?
-  for (unsigned i = 0; i < robot_module.actuators.size(); i++)
-  {
-    // new actuator value = first Sensor value
+  for (unsigned i = 0; i < robot_module.actuators.size(); i++){
+    // new actuator value = latest values from initialJointSensorValues
     commands[5][i][0] = initialJointSensorValues[i];
   }
 
-  try
-  {
+  try{
     dcmProxy->setAlias(commands);
-  }
-  catch (const AL::ALError &e)
-  {
+  }catch (const AL::ALError &e){
     throw ALERROR(getName(), "synchronisedDCMcallback()", "Error when sending command to DCM : " + e.toString());
+  }
+}
+
+
+void FastGetSetDCM::sayText(const std::string &toSay)
+{
+  try{
+    AL::ALTextToSpeechProxy tts(getParentBroker());
+    tts.say(toSay);
+  }catch (const AL::ALError &){
+    qiLogError("module.example") << "Could not get proxy to ALTextToSpeech" << std::endl;
+  }
+}
+
+
+void FastGetSetDCM::setLeds(std::string ledGroupName, const float &r, const float &g, const float &b)
+{
+  int DCMtime;
+  try{
+    DCMtime = dcmProxy->getTime(0);
+  }catch (const AL::ALError &e){
+    throw ALERROR(getName(), "changeShouldersLeds()", "Error on DCM getTime : " + e.toString());
+  }
+
+  // TODO: proceed only if such led group exists!
+  std::vector<AL::ALValue> &rgbCmnds = ledCmdMap[ledGroupName];
+
+  qiLogInfo("rgbCmnds[0].getSize()") << rgbCmnds[0].getSize() << std::endl;
+  qiLogInfo("rgbCmnds[0][5].getSize()") << rgbCmnds[0][5].getSize() << std::endl;
+
+  rgbCmnds[0][4][0] = DCMtime;
+  rgbCmnds[1][4][0] = DCMtime;
+  rgbCmnds[2][4][0] = DCMtime;
+
+  // set RGB values for every memory key of this led group
+  for (int i = 0; i < rgbCmnds[0][5].getSize(); i++){
+    rgbCmnds[0][5][i][0] = r;
+    rgbCmnds[1][5][i][0] = g;
+    rgbCmnds[2][5][i][0] = b;
+  }
+
+  try{
+    dcmProxy->setAlias(rgbCmnds[0]);
+    dcmProxy->setAlias(rgbCmnds[1]);
+    dcmProxy->setAlias(rgbCmnds[2]);
+  }catch (const AL::ALError &e){
+    throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
+  }
+}
+
+void FastGetSetDCM::isetLeds(std::string ledGroupName, const float &intensity)
+{
+  int DCMtime;
+  try{
+    DCMtime = dcmProxy->getTime(0);
+  }catch (const AL::ALError &e){
+    throw ALERROR(getName(), "changeShouldersLeds()", "Error on DCM getTime : " + e.toString());
+  }
+
+  std::vector<AL::ALValue> &intensityCmnds = ledCmdMap[ledGroupName];
+  // assert if intensityCmnds.size()==1, indeed single channel led group
+
+  intensityCmnds[0][4][0] = DCMtime;
+
+  // set intensity values for every memory key of this led group
+  for (int i = 0; i < intensityCmnds[0][5].getSize(); i++){
+    intensityCmnds[0][5][i][0] = intensity;
+  }
+
+  try{
+    dcmProxy->setAlias(intensityCmnds[0]);
+  }catch (const AL::ALError &e){
+    throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
   }
 }
 

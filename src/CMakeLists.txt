@@ -1,6 +1,7 @@
 set(_srcs
     main.cpp
     fastgetsetdcm.cpp
+    RobotModule.cpp
     NAORobotModule.cpp
     PepperRobotModule.cpp
 )
