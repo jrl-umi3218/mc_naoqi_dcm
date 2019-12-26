@@ -4,35 +4,57 @@
 
 namespace dcm_module
 {
+
+struct JointGroup{
+    std::string groupName;
+    std::vector<std::string> jointsNames;
+    std::vector<std::string> setActuatorKeys;
+    std::vector<std::string> setHardnessKeys;
+};
+
+struct rgbLedGroup{
+  std::string groupName;
+  std::vector<std::string> ledNames;
+  std::vector<std::string> redLedKeys;
+  std::vector<std::string> greenLedKeys;
+  std::vector<std::string> blueLedKeys;
+};
+
+struct iLedGroup{
+  std::string groupName;
+  std::vector<std::string> ledNames;
+  std::vector<std::string> intensityLedKeys;
+};
+
 struct RobotModule
 {
+  // Robot name (e.g. nao or pepper)
   std::string name;
-  // Name of actuators.
-  // mc_rtc RobotModule's ref_joint_order should follow the same ordering.
+  // Body joints
   std::vector<std::string> actuators;
-  // Human readable name for all sensors
-  std::vector<std::string> sensors;
-  // Human readable name for eye leds
-  std::vector<std::string> leds;
-  // Human readable name for wheel actuator
-  std::vector<std::string> wheels;
-
-  // naoqi device key to set desired actuator values
+  // Memory keys of body joints position command
   std::vector<std::string> setActuatorKeys;
-  // naoqi device key to set hardness from memory
+  // Memory keys of body joints stiffness command
   std::vector<std::string> setHardnessKeys;
-  // naoqi device key to set led from memory
-  std::vector<std::string> setRedLedKeys;
-  std::vector<std::string> setGreenLedKeys;
-  std::vector<std::string> setBlueLedKeys;
-  // naoqi device key to set desired wheel stiffness
-  std::vector<std::string> setWheelStiffnessKeys;
-  // naoqi device key to set desired wheel speed
-  std::vector<std::string> setWheelActuatorKeys;
-
-  // naoqi device key to read sensors from memory
+  // All sensors
+  std::vector<std::string> sensors;
+  // Memory keys to read all sensors with single call to ALMemoryFastAccess
   std::vector<std::string> readSensorKeys;
+  // IMU sensor names
+  std::vector<std::string> imu = {"AccelerometerX", "AccelerometerY", "AccelerometerZ",
+                                  "GyroscopeX", "GyroscopeY", "GyroscopeZ",
+                                  "AngleX", "AngleY", "AngleZ"};
+  // Groups of special robot joints (e.g. wheels)
+  std::vector<JointGroup> specialJointGroups;
+  // Groups of RGB leds
+  std::vector<rgbLedGroup> rgbLedGroups;
+  // Groups of single channel leds
+  std::vector<iLedGroup> iLedGroups;
 
+  // Generate memory keys
+  void genMemoryKeys(std::string prefix, std::vector<std::string> &devices, std::string postfix,
+                     std::vector<std::string> &memory_keys,
+                     bool isSensor=false, std::string sensor_prefix="");
 };
 
 } /* dcm_module */

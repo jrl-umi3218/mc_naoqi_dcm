@@ -6,81 +6,72 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
 {
   name = "pepper";
 
-  // Joints Sensor list
-  actuators.push_back("KneePitch");
-  actuators.push_back("HipPitch");
-  actuators.push_back("HipRoll");
-  actuators.push_back("HeadYaw");
-  actuators.push_back("HeadPitch");
-  actuators.push_back("LShoulderPitch");
-  actuators.push_back("LShoulderRoll");
-  actuators.push_back("LElbowYaw");
-  actuators.push_back("LElbowRoll");
-  actuators.push_back("LWristYaw");
-  actuators.push_back("LHand");
-  actuators.push_back("RShoulderPitch");
-  actuators.push_back("RShoulderRoll");
-  actuators.push_back("RElbowYaw");
-  actuators.push_back("RElbowRoll");
-  actuators.push_back("RWristYaw");
-  actuators.push_back("RHand");
+  // body joints
+  actuators = {"KneePitch", "HipPitch", "HipRoll", "HeadYaw", "HeadPitch",
+   	"LShoulderPitch", "LShoulderRoll", "LElbowYaw", "LElbowRoll", "LWristYaw", "LHand",
+   	"RShoulderPitch", "RShoulderRoll", "RElbowYaw", "RElbowRoll", "RWristYaw", "RHand"};
 
-  for (unsigned i = 0; i < actuators.size(); ++i)
-  {
-    const std::string& actuator = actuators[i];
-    sensors.push_back("Encoder" + actuator);
-    setActuatorKeys.push_back("Device/SubDeviceList/" + actuator + "/Position/Actuator/Value");
-    setHardnessKeys.push_back("Device/SubDeviceList/" + actuator + "/Hardness/Actuator/Value");
-    readSensorKeys.push_back("Device/SubDeviceList/" + actuator + "/Position/Sensor/Value");
+  // generate memory keys for sending commands to the joints (position/stiffness)
+  genMemoryKeys("", actuators, "/Position/Actuator/Value", setActuatorKeys);
+  genMemoryKeys("", actuators, "/Hardness/Actuator/Value", setHardnessKeys);
+
+  // generate memory keys for reading sensor values
+  // NB! Joint encoders must be in the beginning of the readSensorKeys/sensors
+  genMemoryKeys("", actuators, "/Position/Sensor/Value", readSensorKeys, true, "Encoder");
+  genMemoryKeys("", actuators, "/ElectricCurrent/Sensor/Value", readSensorKeys, true, "ElectricCurrent");
+  genMemoryKeys("InertialSensorBase/", imu, "/Sensor/Value", readSensorKeys, true, "");
+
+  // wheels - special joint groups
+  JointGroup wheels;
+  wheels.groupName = "wheels";
+  wheels.jointsNames = {"WheelFL", "WheelFR", "WheelB"};
+  genMemoryKeys("", wheels.jointsNames, "/Speed/Actuator/Value", wheels.setActuatorKeys);
+  genMemoryKeys("", wheels.jointsNames, "/Stiffness/Actuator/Value", wheels.setHardnessKeys);
+  specialJointGroups.push_back(wheels);
+  // add sensors for the special joint group
+  genMemoryKeys("", wheels.jointsNames, "/Speed/Sensor/Value", readSensorKeys, true, "Encoder");
+
+  // Bumpers
+  std::vector<std::string> bumpers = {"FrontLeft", "FrontRight", "Back"};
+  genMemoryKeys("Platform/", bumpers, "/Bumper/Sensor/Value", readSensorKeys, true, "Bumper");
+
+  // led groups
+  rgbLedGroup eyesCenter;
+  eyesCenter.groupName = "eyesCenter";
+  eyesCenter.ledNames = {"Right/45Deg", "Right/225Deg", "Left/270Deg", "Left/90Deg"};
+  genMemoryKeys("Face/Led/Red/", eyesCenter.ledNames, "/Actuator/Value", eyesCenter.redLedKeys);
+  genMemoryKeys("Face/Led/Green/", eyesCenter.ledNames, "/Actuator/Value", eyesCenter.greenLedKeys);
+  genMemoryKeys("Face/Led/Blue/", eyesCenter.ledNames, "/Actuator/Value", eyesCenter.blueLedKeys);
+  rgbLedGroups.push_back(eyesCenter);
+
+  rgbLedGroup eyesPeripheral;
+  eyesPeripheral.groupName = "eyesPeripheral";
+  eyesPeripheral.ledNames = {"Right/0Deg", "Right/90Deg", "Right/135Deg", "Right/180Deg", "Right/270Deg", "Right/315Deg",
+                             "Left/0Deg", "Left/45Deg", "Left/135Deg", "Left/180Deg", "Left/225Deg", "Left/315Deg"};
+  genMemoryKeys("Face/Led/Red/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.redLedKeys);
+  genMemoryKeys("Face/Led/Green/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.greenLedKeys);
+  genMemoryKeys("Face/Led/Blue/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.blueLedKeys);
+  rgbLedGroups.push_back(eyesPeripheral);
+
+  rgbLedGroup shoulderLeds;
+  shoulderLeds.groupName = "shoulderLeds";
+  shoulderLeds.ledNames = {""};
+  genMemoryKeys("ChestBoard/Led/Red", shoulderLeds.ledNames, "/Actuator/Value", shoulderLeds.redLedKeys);
+  genMemoryKeys("ChestBoard/Led/Green", shoulderLeds.ledNames, "/Actuator/Value", shoulderLeds.greenLedKeys);
+  genMemoryKeys("ChestBoard/Led/Blue", shoulderLeds.ledNames, "/Actuator/Value", shoulderLeds.blueLedKeys);
+  rgbLedGroups.push_back(shoulderLeds);
+
+  iLedGroup earsLeds;
+  earsLeds.groupName = "earsLeds";
+  unsigned numEarLeds = 10;
+  unsigned earLedAngleStep = 36;
+  // generate memory keys for changing color of all ear leds
+  for (unsigned i = 0; i < numEarLeds; i++){
+    earsLeds.ledNames.push_back("Right/" + std::to_string(i*earLedAngleStep) + "Deg");
+    earsLeds.ledNames.push_back("Left/" + std::to_string(i*earLedAngleStep) + "Deg");
   }
-
-  // Inertial sensors
-  sensors.push_back("AccelerometerX");
-  sensors.push_back("AccelerometerY");
-  sensors.push_back("AccelerometerZ");
-  sensors.push_back("GyroscopeX");
-  sensors.push_back("GyroscopeY");
-  sensors.push_back("GyroscopeZ");
-  sensors.push_back("AngleX");
-  sensors.push_back("AngleY");
-  sensors.push_back("AngleZ");
-
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AccelerometerX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AccelerometerY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AccelerometerZ/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/GyroscopeX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/GyroscopeY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/GyroscopeZ/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AngleX/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AngleY/Sensor/Value");
-  readSensorKeys.push_back("Device/SubDeviceList/InertialSensorBase/AngleZ/Sensor/Value");
-
-  // Leds
-  leds.push_back("Left/45Deg");
-  leds.push_back("Left/90Deg");
-  leds.push_back("Right/0Deg");
-  leds.push_back("Right/45Deg");
-
-  for (unsigned i = 0; i < leds.size(); ++i)
-  {
-    setRedLedKeys.push_back("Device/SubDeviceList/Face/Led/Red/" + leds[i] + "/Actuator/Value");
-    setGreenLedKeys.push_back("Device/SubDeviceList/Face/Led/Green/" + leds[i] + "/Actuator/Value");
-    setBlueLedKeys.push_back("Device/SubDeviceList/Face/Led/Blue/" + leds[i] + "/Actuator/Value");
-  }
-
-  // Wheels
-  wheels.push_back("WheelFL");
-  wheels.push_back("WheelFR");
-  wheels.push_back("WheelB");
-
-  for (unsigned i = 0; i < wheels.size(); ++i)
-  {
-    const std::string& wheel = wheels[i];
-    sensors.push_back("Encoder" + wheel);
-    setWheelStiffnessKeys.push_back("Device/SubDeviceList/" + wheel + "/Stiffness/Actuator/Value");
-    setWheelActuatorKeys.push_back("Device/SubDeviceList/" + wheel + "/Speed/Actuator/Value");
-    readSensorKeys.push_back("Device/SubDeviceList/" + wheel + "/Speed/Sensor/Value");
-  }
+  genMemoryKeys("Ears/Led/", earsLeds.ledNames, "/Actuator/Value", earsLeds.intensityLedKeys);
+  iLedGroups.push_back(earsLeds);
 }
 
 } /* dcm_module */
