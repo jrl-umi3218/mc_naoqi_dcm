@@ -14,7 +14,7 @@ class DCMProxy;
 namespace dcm_module
 {
 /**
- * @brief Module to use fast method to get/set joints every 10ms with minimum delays.
+ * @brief Module to use fast method to get/set joints every 12ms with minimum delays.
  * Supported robots are PEPPER and NAO, but it should be suitable to for
  * extension to other Softbank Robotics robots.
  */
@@ -22,7 +22,7 @@ class FastGetSetDCM : public AL::ALModule
 {
  public:
   /**
-   * @brief Module to use fast method to get/set joints every 10ms with minimum delays.
+   * @brief Module to use fast method to get/set joints every 12ms with minimum delays.
    *
    * @param broker A smart pointer to the broker (communication object)
    * @param name The name of the module
@@ -45,14 +45,14 @@ class FastGetSetDCM : public AL::ALModule
   /*! ALMemory fast access */
   void initFastAccess();
 
-  /*!  Connect callback to the DCM post proccess */
+  /*!  Connect callback to the DCM preproccess */
   void connectToDCMloop();
 
   /**
-  * @brief Callback called by the DCM every 10ms
+  * @brief Callback called by the DCM every 12ms
   *
-  *  Once this method is connected to DCM postprocess
-  *  it will be called in Real Time every 10 milliseconds from DCM thread
+  *  Once this method is connected to DCM preprocess
+  *  it will be called in Real Time every 12 milliseconds from DCM thread
   *  Dynamic allocation and system call are strictly forbidden in this method
   *  Computation time in this section must remain as short as possible to prevent
   *  erratic move or joint getting loose.
@@ -145,9 +145,15 @@ class FastGetSetDCM : public AL::ALModule
   // blink
   void blink();
 
+  // check if preProces is connected
+  bool isPreProccessConnected();
+
  private:
-  // Used for postprocess sync with the DCM
-  ProcessSignalConnection fDCMPostProcessConnection;
+  // Used for preprocess sync with the DCM
+  ProcessSignalConnection fDCMPreProcessConnection;
+
+  // Used to check id preprocess is connected
+  bool preProcessConnected = false;
 
   // Used for fast memory access
   boost::shared_ptr<AL::ALMemoryFastAccess> fMemoryFastAccess;
@@ -156,9 +162,8 @@ class FastGetSetDCM : public AL::ALModule
   std::vector<float> sensorValues;
   boost::shared_ptr<AL::DCMProxy> dcmProxy;
 
-  // Used for sending joint position commands every 10ms in callback
-  // TODO: it probably makes sense to rename this variable to better reflect it's function
-  std::vector<float> initialJointSensorValues;
+  // Used for sending joint position commands every 12ms in callback
+  std::vector<float> jointPositionCommands;
 
   // Used to store joint possition command to set via DCM every 12ms
   AL::ALValue commands;

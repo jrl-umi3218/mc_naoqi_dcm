@@ -31,6 +31,10 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   // add sensors for the special joint group
   genMemoryKeys("", wheels.jointsNames, "/Speed/Sensor/Value", readSensorKeys, true, "Encoder");
 
+  // Bumpers
+  std::vector<std::string> bumpers = {"FrontLeft", "FrontRight", "Back"};
+  genMemoryKeys("Platform/", bumpers, "/Bumper/Sensor/Value", readSensorKeys, true, "Bumper");
+
   // led groups
   rgbLedGroup eyesCenter;
   eyesCenter.groupName = "eyesCenter";

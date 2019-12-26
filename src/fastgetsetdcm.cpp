@@ -1,4 +1,5 @@
-/// Module to use fast method to get/set joints every 12ms with minimum delays.
+/// Module to communicate with mc_rtc_naoqi interface for whole-body control via mc_rtc framework
+/// Enables connection of a preproccess callback to DCM loop for sending joint commands every 12ms
 /// Implemented for both NAO and PEPPER robots.
 
 #include "fastgetsetdcm.h"
@@ -24,17 +25,21 @@
 
 namespace dcm_module
 {
-FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
-                             const std::string &name)
+FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string &name)
     : AL::ALModule(broker, name), fMemoryFastAccess(boost::shared_ptr<AL::ALMemoryFastAccess>(new AL::ALMemoryFastAccess()))
 {
-  setModuleDescription("Module to use fast method to get/set joints every 12ms with minimum delays.");
+  setModuleDescription("Module to communicate with mc_rtc_naoqi interface for whole-body control via mc_rtc framework");
 
-  functionName("startLoop", getName(), "start");
+  // Bind methods to make them accessible through proxies
+  functionName("startLoop", getName(), "connect a callback to DCM loop");
   BIND_METHOD(FastGetSetDCM::startLoop);
 
-  functionName("stopLoop", getName(), "stop");
+  functionName("stopLoop", getName(), "disconnect a callback from DCM loop");
   BIND_METHOD(FastGetSetDCM::stopLoop);
+
+  functionName("isPreProccessConnected", getName(), "Check if preProccess is connected");
+  setReturn("if connected", "boolean indicating if preProccess is connected to DCM loop");
+  BIND_METHOD(FastGetSetDCM::isPreProccessConnected);
 
   functionName("setStiffness", getName(), "change stiffness of all joint");
   addParam("value", "new stiffness value from 0.0 to 1.0");
@@ -45,12 +50,11 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
   BIND_METHOD(FastGetSetDCM::setJointAngles);
 
   functionName("getJointOrder", getName(), "get reference joint order");
-  setReturn("joint order", "array containing joint order");
+  setReturn("joint order", "array containing names of all the joints");
   BIND_METHOD(FastGetSetDCM::getJointOrder);
-  // TODO: m_controller.robot().refJointOrder() == dcm.robot_module.getJointOrder()
 
-  functionName("getSensorsOrder", getName(), "get names for each sensor index");
-  setReturn("sensor names", "array containing namess of all the sensors");
+  functionName("getSensorsOrder", getName(), "get reference sensor order");
+  setReturn("sensor names", "array containing names of all the sensors");
   BIND_METHOD(FastGetSetDCM::getSensorsOrder);
 
   functionName("numSensors", getName(), "get total number of sensors");
@@ -79,16 +83,10 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
   BIND_METHOD(FastGetSetDCM::isetLeds);
 
   functionName("blink", getName(), "blink");
-  BIND_METHOD(FastGetSetDCM::blink); // bind makes methods accessible through proxies
-
-  // XXX should be a compile-time check, but no C++11 support makes it tricky
-  #if defined(PEPPER) || defined(NAO)
-  #else
-  #error "Only PEPPER and NAO robots are supported"
-  #endif
+  BIND_METHOD(FastGetSetDCM::blink);
 
   #ifdef PEPPER
-
+    // Bind methods specific to Pepper robot
     functionName("setWheelsStiffness", getName(), "change wheels stiffness");
     addParam("value", "new stiffness value from 0.0 to 1.0");
     BIND_METHOD(FastGetSetDCM::setWheelsStiffness);
@@ -99,61 +97,89 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker,
     addParam("speed_b", "back wheel speed");
     BIND_METHOD(FastGetSetDCM::setWheelSpeed);
 
+    // Create Pepper robot module
     robot_module = PepperRobotModule();
   #else
+    // Create NAO robot module
     robot_module = NAORobotModule();
   #endif
 
-  startLoop();
+  // Get the DCM proxy
+  try{
+    dcmProxy = getParentBroker()->getDcmProxy();
+  }catch (AL::ALError &e){
+    throw ALERROR(getName(), "FastGetSetDCM", "Impossible to create DCM Proxy : " + e.toString());
+  }
+
+  // Check that DCM is running
+  signed long isDCMRunning;
+  try{
+    isDCMRunning = getParentBroker()->getProxy("ALLauncher")->call<bool>("isModulePresent", std::string("DCM"));
+  }catch (AL::ALError &e){
+    throw ALERROR(getName(), "FastGetSetDCM", "Error when connecting to DCM : " + e.toString());
+  }
+
+  if (!isDCMRunning){
+    throw ALERROR(getName(), "FastGetSetDCM", "Error no DCM running ");
+  }
+
+  // initialize sensor reading/setting
+  init();
+
+  // Get all sensor values from ALMemory using fastaccess
+  fMemoryFastAccess->GetValues(sensorValues);
+
+  // Save initial sensor values into 'jointPositionCommands'
+  for (int i = 0; i < robot_module.actuators.size(); i++){
+    jointPositionCommands.push_back(sensorValues[i]);
+  }
+
+  // Send initial command to the actuators
+  int DCMtime;
+  try{
+    // Get absolute time, at 0 ms in the future ( i.e. now )
+    DCMtime = dcmProxy->getTime(0);
+  }catch (const AL::ALError &e){
+    throw ALERROR(getName(), "FastGetSetDCM", "Error on DCM getTime : " + e.toString());
+  }
+  commands[4][0] = DCMtime;
+  for (unsigned i = 0; i < robot_module.actuators.size(); i++){
+    commands[5][i][0] = jointPositionCommands[i];
+  }
+  try{
+    dcmProxy->setAlias(commands);
+  }catch (const AL::ALError &e){
+    throw ALERROR(getName(), "FastGetSetDCM", "Error when sending command to DCM : " + e.toString());
+  }
 }
 
+// Module destructor
 FastGetSetDCM::~FastGetSetDCM()
 {
+  setWheelSpeed(0.0f, 0.0f, 0.0f);
+  setStiffness(0.0f);
+  setWheelsStiffness(0.0f);
   stopLoop();
 }
 
 // Start loop
 void FastGetSetDCM::startLoop()
 {
-  signed long isDCMRunning;
-
-  // Get the DCM proxy
-  try{
-    dcmProxy = getParentBroker()->getDcmProxy();
-  }catch (AL::ALError &e){
-    throw ALERROR(getName(), "startLoop()", "Impossible to create DCM Proxy : " + e.toString());
-  }
-
-  // Is the DCM running ?
-  try{
-    isDCMRunning = getParentBroker()->getProxy("ALLauncher")->call<bool>("isModulePresent", std::string("DCM"));
-  }catch (AL::ALError &e)
-  {
-    throw ALERROR(getName(), "startLoop()", "Error when connecting to DCM : " + e.toString());
-  }
-
-  if (!isDCMRunning){
-    throw ALERROR(getName(), "startLoop()", "Error no DCM running ");
-  }
-
-  // initialize sensor reading/setting
-  init();
-
-  // read current joint sensor values (fill 'initialJointSensorValues')
-  // connect a joint updater from 'initialJointSensorValues' to DCM loop (every 12ms)
   connectToDCMloop();
+  preProcessConnected = true;
 }
 
-
+// Stop loop
 void FastGetSetDCM::stopLoop()
 {
-  setWheelSpeed(0.0f, 0.0f, 0.0f);
-  setStiffness(0.0f);
-  setWheelsStiffness(0.0f);
-  // Remove the postProcess call back connection
-  fDCMPostProcessConnection.disconnect();
+  // Remove the preProcess callback connection
+  fDCMPreProcessConnection.disconnect();
+  preProcessConnected = false;
 }
 
+bool FastGetSetDCM::isPreProccessConnected(){
+  return preProcessConnected;
+}
 
 void FastGetSetDCM::init()
 {
@@ -322,7 +348,7 @@ void FastGetSetDCM::setStiffness(const float &stiffnessValue)
 void FastGetSetDCM::setJointAngles(std::vector<float> jointValues)
 {
   // update values in the vector that is used to send joint commands every 12ms
-  initialJointSensorValues = jointValues;
+  jointPositionCommands = jointValues;
 }
 
 std::vector<std::string> FastGetSetDCM::getJointOrder() const
@@ -349,27 +375,19 @@ std::vector<float> FastGetSetDCM::getSensors()
 
 void FastGetSetDCM::connectToDCMloop()
 {
-  // Get all values from ALMemory using fastaccess
-  fMemoryFastAccess->GetValues(sensorValues);
-
-  // Save initial sensor values into 'initialJointSensorValues'
-  for (int i = 0; i < robot_module.actuators.size(); i++){
-    initialJointSensorValues.push_back(sensorValues[i]);
-  }
-
-  // Connect callback to the DCM post proccess
+  // Connect callback to the DCM pre proccess
   try{
     //  onPreProcess is useful because it’s called just before the computation of orders sent to the chestboard (USB). Sending commands at this level means that you have the shortest delay to your command.
-    fDCMPostProcessConnection =
+    fDCMPreProcessConnection =
         getParentBroker()->getProxy("DCM")->getModule()->atPreProcess(boost::bind(&FastGetSetDCM::synchronisedDCMcallback, this));
+        // what happens if I add it twice? add same callback while it is already added? try in python?
   }catch (const AL::ALError &e){
-    throw ALERROR(getName(), "connectToDCMloop()", "Error when connecting to DCM postProccess: " + e.toString());
+    throw ALERROR(getName(), "connectToDCMloop()", "Error when connecting to DCM preProccess: " + e.toString());
   }
 }
 
-
 // using 'jointActuator' alias created 'command'
-// that will use data from 'initialJointSensorValues' to send it to DCM every 12 ms
+// that will use data from 'jointPositionCommands' to send it to DCM every 12 ms
 void FastGetSetDCM::synchronisedDCMcallback()
 {
   int DCMtime;
@@ -385,8 +403,8 @@ void FastGetSetDCM::synchronisedDCMcallback()
 
   // XXX make this faster with memcpy?
   for (unsigned i = 0; i < robot_module.actuators.size(); i++){
-    // new actuator value = latest values from initialJointSensorValues
-    commands[5][i][0] = initialJointSensorValues[i];
+    // new actuator value = latest values from jointPositionCommands
+    commands[5][i][0] = jointPositionCommands[i];
   }
 
   try{
