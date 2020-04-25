@@ -4,8 +4,7 @@ mc_naoqi_dcm
 Fast communication module with NAO/PEPPER sensors and actuators and `mc_rtc` control framework.
 This is a local robot module, that needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot.
 
-How to build
-==
+## How to build
 
 First, you'll need to install the NAOqi SDK and building tools. To do so, follow the [getting started](http://doc.aldebaran.com/qibuild/beginner/getting_started.html) instructions on how to install qibuild and the NAOqi SDK.
 
@@ -40,6 +39,8 @@ Now, build the project
 qibuild configure --release -DROBOT_NAME=<pepper|nao>
 qibuild make
 ```
+
+## How to use
 
 Once the local module is built, transfer it to the robot
 
