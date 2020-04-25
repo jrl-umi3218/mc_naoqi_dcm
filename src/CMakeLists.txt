@@ -1,10 +1,10 @@
 set(_srcs
     main.cpp
-    fastgetsetdcm.cpp
+    mc_naoqi_dcm.cpp
     RobotModule.cpp
     NAORobotModule.cpp
     PepperRobotModule.cpp
 )
 
-qi_create_lib(fastgetsetdcm SHARED ${_srcs} SUBFOLDER naoqi)
-qi_use_lib(fastgetsetdcm ALCOMMON ALMEMORYFASTACCESS)
+qi_create_lib(mc_naoqi_dcm SHARED ${_srcs} SUBFOLDER naoqi)
+qi_use_lib(mc_naoqi_dcm ALCOMMON ALMEMORYFASTACCESS)

@@ -2,7 +2,7 @@
 /// Enables connection of a preproccess callback to DCM loop for sending joint commands every 12ms
 /// Implemented for both NAO and PEPPER robots.
 
-#include "fastgetsetdcm.h"
+#include "mc_naoqi_dcm.h"
 #include <alcommon/albroker.h>
 #include <alcommon/almodule.h>
 #include <alcommon/alproxy.h>
@@ -27,51 +27,51 @@
 
 #include <boost/bind.hpp>
 
-namespace dcm_module
+namespace mc_naoqi_dcm
 {
-FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string &name)
+MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string &name)
     : AL::ALModule(broker, name), fMemoryFastAccess(boost::shared_ptr<AL::ALMemoryFastAccess>(new AL::ALMemoryFastAccess()))
 {
   setModuleDescription("Module to communicate with mc_rtc_naoqi interface for whole-body control via mc_rtc framework");
 
   // Bind methods to make them accessible through proxies
   functionName("startLoop", getName(), "connect a callback to DCM loop");
-  BIND_METHOD(FastGetSetDCM::startLoop);
+  BIND_METHOD(MCNAOqiDCM::startLoop);
 
   functionName("stopLoop", getName(), "disconnect a callback from DCM loop");
-  BIND_METHOD(FastGetSetDCM::stopLoop);
+  BIND_METHOD(MCNAOqiDCM::stopLoop);
 
   functionName("isPreProccessConnected", getName(), "Check if preProccess is connected");
   setReturn("if connected", "boolean indicating if preProccess is connected to DCM loop");
-  BIND_METHOD(FastGetSetDCM::isPreProccessConnected);
+  BIND_METHOD(MCNAOqiDCM::isPreProccessConnected);
 
   functionName("setStiffness", getName(), "change stiffness of all joint");
   addParam("value", "new stiffness value from 0.0 to 1.0");
-  BIND_METHOD(FastGetSetDCM::setStiffness);
+  BIND_METHOD(MCNAOqiDCM::setStiffness);
 
   functionName("setJointAngles", getName(), "set joint angles");
   addParam("values", "new joint angles (in radian)");
-  BIND_METHOD(FastGetSetDCM::setJointAngles);
+  BIND_METHOD(MCNAOqiDCM::setJointAngles);
 
   functionName("getJointOrder", getName(), "get reference joint order");
   setReturn("joint order", "array containing names of all the joints");
-  BIND_METHOD(FastGetSetDCM::getJointOrder);
+  BIND_METHOD(MCNAOqiDCM::getJointOrder);
 
   functionName("getSensorsOrder", getName(), "get reference sensor order");
   setReturn("sensor names", "array containing names of all the sensors");
-  BIND_METHOD(FastGetSetDCM::getSensorsOrder);
+  BIND_METHOD(MCNAOqiDCM::getSensorsOrder);
 
   functionName("numSensors", getName(), "get total number of sensors");
   setReturn("sensors number", "int indicating total number of different sensors");
-  BIND_METHOD(FastGetSetDCM::numSensors);
+  BIND_METHOD(MCNAOqiDCM::numSensors);
 
   functionName("getSensors", getName(), "get all sensor values");
   setReturn("sensor values", "array containing values of all the sensors");
-  BIND_METHOD(FastGetSetDCM::getSensors);
+  BIND_METHOD(MCNAOqiDCM::getSensors);
 
   functionName("sayText", getName(), "Say a given sentence.");
   addParam("toSay", "The sentence to be said.");
-  BIND_METHOD(FastGetSetDCM::sayText);
+  BIND_METHOD(MCNAOqiDCM::sayText);
 
   functionName("setLeds", getName(), "setLeds");
   addParam("ledGroupName", "Name of the leds group from robot module");
@@ -79,30 +79,30 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::
   addParam("g", "green intensity %");
   addParam("b", "blue intensity %");
   addParam("delay", "delay in ms");
-  BIND_METHOD(FastGetSetDCM::setLeds);
+  BIND_METHOD(MCNAOqiDCM::setLeds);
 
   functionName("isetLeds", getName(), "isetLeds");
   addParam("ledGroupName", "Name of the leds group from robot module");
   addParam("b", "blue intensity %");
-  BIND_METHOD(FastGetSetDCM::isetLeds);
+  BIND_METHOD(MCNAOqiDCM::isetLeds);
 
   functionName("blink", getName(), "blink");
-  BIND_METHOD(FastGetSetDCM::blink);
+  BIND_METHOD(MCNAOqiDCM::blink);
 
   functionName("onBumperPressed", getName(), "When the bumper is pressed. Switch off wheels");
-  BIND_METHOD(FastGetSetDCM::onBumperPressed);
+  BIND_METHOD(MCNAOqiDCM::onBumperPressed);
 
   #ifdef PEPPER
     // Bind methods specific to Pepper robot
     functionName("setWheelsStiffness", getName(), "change wheels stiffness");
     addParam("value", "new stiffness value from 0.0 to 1.0");
-    BIND_METHOD(FastGetSetDCM::setWheelsStiffness);
+    BIND_METHOD(MCNAOqiDCM::setWheelsStiffness);
 
     functionName("setWheelSpeed", getName(), "change wheel speed");
     addParam("speed_fl", "front left wheel speed");
     addParam("speed_fr", "front right wheel speed");
     addParam("speed_b", "back wheel speed");
-    BIND_METHOD(FastGetSetDCM::setWheelSpeed);
+    BIND_METHOD(MCNAOqiDCM::setWheelSpeed);
 
     // Create Pepper robot module
     robot_module = PepperRobotModule();
@@ -115,14 +115,14 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::
   try{
     dcmProxy = getParentBroker()->getDcmProxy();
   }catch (AL::ALError &e){
-    throw ALERROR(getName(), "FastGetSetDCM", "Impossible to create DCM Proxy : " + e.toString());
+    throw ALERROR(getName(), "MCNAOqiDCM", "Impossible to create DCM Proxy : " + e.toString());
   }
 
   // Get the ALMemory proxy
   try{
     memoryProxy = getParentBroker()->getMemoryProxy();
   }catch (AL::ALError &e){
-    throw ALERROR(getName(), "FastGetSetDCM", "Impossible to create ALMemory Proxy : " + e.toString());
+    throw ALERROR(getName(), "MCNAOqiDCM", "Impossible to create ALMemory Proxy : " + e.toString());
   }
 
   // Check that DCM is running
@@ -130,11 +130,11 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::
   try{
     isDCMRunning = getParentBroker()->getProxy("ALLauncher")->call<bool>("isModulePresent", std::string("DCM"));
   }catch (AL::ALError &e){
-    throw ALERROR(getName(), "FastGetSetDCM", "Error when connecting to DCM : " + e.toString());
+    throw ALERROR(getName(), "MCNAOqiDCM", "Error when connecting to DCM : " + e.toString());
   }
 
   if (!isDCMRunning){
-    throw ALERROR(getName(), "FastGetSetDCM", "Error no DCM running ");
+    throw ALERROR(getName(), "MCNAOqiDCM", "Error no DCM running ");
   }
 
   // initialize sensor reading/setting
@@ -154,7 +154,7 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::
     // Get absolute time, at 0 ms in the future ( i.e. now )
     DCMtime = dcmProxy->getTime(0);
   }catch (const AL::ALError &e){
-    throw ALERROR(getName(), "FastGetSetDCM", "Error on DCM getTime : " + e.toString());
+    throw ALERROR(getName(), "MCNAOqiDCM", "Error on DCM getTime : " + e.toString());
   }
   commands[4][0] = DCMtime;
   for (unsigned i = 0; i < robot_module.actuators.size(); i++){
@@ -163,12 +163,12 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::
   try{
     dcmProxy->setAlias(commands);
   }catch (const AL::ALError &e){
-    throw ALERROR(getName(), "FastGetSetDCM", "Error when sending command to DCM : " + e.toString());
+    throw ALERROR(getName(), "MCNAOqiDCM", "Error when sending command to DCM : " + e.toString());
   }
 }
 
 // Module destructor
-FastGetSetDCM::~FastGetSetDCM()
+MCNAOqiDCM::~MCNAOqiDCM()
 {
   bumperSafetyReflex(false);
   setWheelSpeed(0.0f, 0.0f, 0.0f);
@@ -178,37 +178,37 @@ FastGetSetDCM::~FastGetSetDCM()
 }
 
 // Enable/disable mobile base safety reflex
-void FastGetSetDCM::bumperSafetyReflex(bool state)
+void MCNAOqiDCM::bumperSafetyReflex(bool state)
 {
   if(state){
     // Subscribe to events
-    memoryProxy->subscribeToEvent("RightBumperPressed", "FastGetSetDCM", "onBumperPressed");
-    memoryProxy->subscribeToEvent("LeftBumperPressed", "FastGetSetDCM", "onBumperPressed");
-    memoryProxy->subscribeToEvent("BackBumperPressed", "FastGetSetDCM", "onBumperPressed");
+    memoryProxy->subscribeToEvent("RightBumperPressed", "MCNAOqiDCM", "onBumperPressed");
+    memoryProxy->subscribeToEvent("LeftBumperPressed", "MCNAOqiDCM", "onBumperPressed");
+    memoryProxy->subscribeToEvent("BackBumperPressed", "MCNAOqiDCM", "onBumperPressed");
   }else{
     // Unsubscribe event callback
-    memoryProxy->unsubscribeToEvent("RightBumperPressed", "FastGetSetDCM");
-    memoryProxy->unsubscribeToEvent("LeftBumperPressed", "FastGetSetDCM");
-    memoryProxy->unsubscribeToEvent("BackBumperPressed", "FastGetSetDCM");
+    memoryProxy->unsubscribeToEvent("RightBumperPressed", "MCNAOqiDCM");
+    memoryProxy->unsubscribeToEvent("LeftBumperPressed", "MCNAOqiDCM");
+    memoryProxy->unsubscribeToEvent("BackBumperPressed", "MCNAOqiDCM");
   }
 }
 
 // Start loop
-void FastGetSetDCM::startLoop()
+void MCNAOqiDCM::startLoop()
 {
   connectToDCMloop();
   preProcessConnected = true;
 }
 
 // Stop loop
-void FastGetSetDCM::stopLoop()
+void MCNAOqiDCM::stopLoop()
 {
   // Remove the preProcess callback connection
   fDCMPreProcessConnection.disconnect();
   preProcessConnected = false;
 }
 
-void FastGetSetDCM::onBumperPressed() {
+void MCNAOqiDCM::onBumperPressed() {
   // TODO make thread safe
 
   // Turn off wheels
@@ -216,11 +216,11 @@ void FastGetSetDCM::onBumperPressed() {
   setWheelSpeed(0.0f, 0.0f, 0.0f);
 }
 
-bool FastGetSetDCM::isPreProccessConnected(){
+bool MCNAOqiDCM::isPreProccessConnected(){
   return preProcessConnected;
 }
 
-void FastGetSetDCM::init()
+void MCNAOqiDCM::init()
 {
   // Enable fast access of all robot_module.readSensorKeys from memory
   initFastAccess();
@@ -245,13 +245,13 @@ void FastGetSetDCM::init()
   #endif
 }
 
-void FastGetSetDCM::initFastAccess(){
+void MCNAOqiDCM::initFastAccess(){
   // Create the fast memory access to read sensor values
   fMemoryFastAccess->ConnectToVariables(getParentBroker(), robot_module.readSensorKeys, false);
 }
 
 
-void FastGetSetDCM::createAliasPrepareCommand(std::string aliasName,
+void MCNAOqiDCM::createAliasPrepareCommand(std::string aliasName,
                 const std::vector<std::string> &mem_keys,
                 AL::ALValue& alias_command, std::string updateType){
 
@@ -291,7 +291,7 @@ void FastGetSetDCM::createAliasPrepareCommand(std::string aliasName,
   }
 }
 
-void FastGetSetDCM::createLedAliases()
+void MCNAOqiDCM::createLedAliases()
 {
   // RGB led groups
   for(int i=0;i<robot_module.rgbLedGroups.size();i++){
@@ -319,7 +319,7 @@ void FastGetSetDCM::createLedAliases()
   }
 }
 
-void FastGetSetDCM::setWheelsStiffness(const float &stiffnessValue)
+void MCNAOqiDCM::setWheelsStiffness(const float &stiffnessValue)
 {
   int DCMtime;
   try{
@@ -340,7 +340,7 @@ void FastGetSetDCM::setWheelsStiffness(const float &stiffnessValue)
   }
 }
 
-void FastGetSetDCM::setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b)
+void MCNAOqiDCM::setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b)
 {
   int DCMtime;
   try{
@@ -361,7 +361,7 @@ void FastGetSetDCM::setWheelSpeed(const float &speed_fl, const float &speed_fr, 
   }
 }
 
-void FastGetSetDCM::setStiffness(const float &stiffnessValue)
+void MCNAOqiDCM::setStiffness(const float &stiffnessValue)
 {
   int DCMtime;
   // increase stiffness with the "jointStiffness" Alias created at initialisation
@@ -384,45 +384,43 @@ void FastGetSetDCM::setStiffness(const float &stiffnessValue)
   }
 }
 
-// This function might be making a copy of the jointValues
-// Can I pass reference as an argument instead? Will it speed up the process?
-void FastGetSetDCM::setJointAngles(std::vector<float> jointValues)
+void MCNAOqiDCM::setJointAngles(std::vector<float> jointValues)
 {
   // update values in the vector that is used to send joint commands every 12ms
   jointPositionCommands = jointValues;
 }
 
-std::vector<std::string> FastGetSetDCM::getJointOrder() const
+std::vector<std::string> MCNAOqiDCM::getJointOrder() const
 {
   return robot_module.actuators;
 }
 
-std::vector<std::string> FastGetSetDCM::getSensorsOrder() const
+std::vector<std::string> MCNAOqiDCM::getSensorsOrder() const
 {
   return robot_module.sensors;
 }
 
-int FastGetSetDCM::numSensors() const
+int MCNAOqiDCM::numSensors() const
 {
   return robot_module.readSensorKeys.size();
 }
 
 // Method is not synchronized with DCM loop
 // Better approach might be to call GetValues on postprocess of DCM loop
-std::vector<float> FastGetSetDCM::getSensors()
+std::vector<float> MCNAOqiDCM::getSensors()
 {
   // Get all values from ALMemory using fastaccess
   fMemoryFastAccess->GetValues(sensorValues);
   return sensorValues;
 }
 
-void FastGetSetDCM::connectToDCMloop()
+void MCNAOqiDCM::connectToDCMloop()
 {
   // Connect callback to the DCM pre proccess
   try{
     //  onPreProcess is useful because it’s called just before the computation of orders sent to the chestboard (USB). Sending commands at this level means that you have the shortest delay to your command.
     fDCMPreProcessConnection =
-        getParentBroker()->getProxy("DCM")->getModule()->atPreProcess(boost::bind(&FastGetSetDCM::synchronisedDCMcallback, this));
+        getParentBroker()->getProxy("DCM")->getModule()->atPreProcess(boost::bind(&MCNAOqiDCM::synchronisedDCMcallback, this));
         // what happens if I add it twice? add same callback while it is already added? try in python?
   }catch (const AL::ALError &e){
     throw ALERROR(getName(), "connectToDCMloop()", "Error when connecting to DCM preProccess: " + e.toString());
@@ -431,7 +429,7 @@ void FastGetSetDCM::connectToDCMloop()
 
 // using 'jointActuator' alias created 'command'
 // that will use data from 'jointPositionCommands' to send it to DCM every 12 ms
-void FastGetSetDCM::synchronisedDCMcallback()
+void MCNAOqiDCM::synchronisedDCMcallback()
 {
   int DCMtime;
 
@@ -458,7 +456,7 @@ void FastGetSetDCM::synchronisedDCMcallback()
 }
 
 
-void FastGetSetDCM::sayText(const std::string &toSay)
+void MCNAOqiDCM::sayText(const std::string &toSay)
 {
   try{
     AL::ALTextToSpeechProxy tts(getParentBroker());
@@ -469,7 +467,7 @@ void FastGetSetDCM::sayText(const std::string &toSay)
 }
 
 
-void FastGetSetDCM::setLeds(std::string ledGroupName, const float &r, const float &g, const float &b)
+void MCNAOqiDCM::setLeds(std::string ledGroupName, const float &r, const float &g, const float &b)
 {
   int DCMtime;
   try{
@@ -504,7 +502,7 @@ void FastGetSetDCM::setLeds(std::string ledGroupName, const float &r, const floa
   }
 }
 
-void FastGetSetDCM::setLedsDelay(std::string ledGroupName, const float &r, const float &g, const float &b, const int& delay)
+void MCNAOqiDCM::setLedsDelay(std::string ledGroupName, const float &r, const float &g, const float &b, const int& delay)
 {
   int DCMtime;
   try{
@@ -539,7 +537,7 @@ void FastGetSetDCM::setLedsDelay(std::string ledGroupName, const float &r, const
   }
 }
 
-void FastGetSetDCM::isetLeds(std::string ledGroupName, const float &intensity)
+void MCNAOqiDCM::isetLeds(std::string ledGroupName, const float &intensity)
 {
   int DCMtime;
   try{
@@ -565,7 +563,7 @@ void FastGetSetDCM::isetLeds(std::string ledGroupName, const float &intensity)
   }
 }
 
-void FastGetSetDCM::blink()
+void MCNAOqiDCM::blink()
 {
   // This is possible because led aliases update type is "Merge"
   setLedsDelay("eyesPeripheral", 0.0, 0.0, 0.0, 75);
@@ -575,4 +573,4 @@ void FastGetSetDCM::blink()
   setLedsDelay("eyesCenter", 1.0, 1.0, 1.0, 300);
 }
 
-} /* dcm_module */
+} /* mc_naoqi_dcm */

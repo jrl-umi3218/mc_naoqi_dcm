@@ -13,14 +13,14 @@ class DCMProxy;
 class ALMemoryProxy;
 }
 
-namespace dcm_module
+namespace mc_naoqi_dcm
 {
 /**
  * @brief Module to use fast method to get/set joints every 12ms with minimum delays.
  * Supported robots are PEPPER and NAO, but it should be suitable to for
  * extension to other Softbank Robotics robots.
  */
-class FastGetSetDCM : public AL::ALModule
+class MCNAOqiDCM : public AL::ALModule
 {
  public:
   /**
@@ -29,10 +29,10 @@ class FastGetSetDCM : public AL::ALModule
    * @param broker A smart pointer to the broker (communication object)
    * @param name The name of the module
    */
-  FastGetSetDCM(boost::shared_ptr<AL::ALBroker> pBroker,
+  MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> pBroker,
                 const std::string &pName);
 
-  virtual ~FastGetSetDCM();
+  virtual ~MCNAOqiDCM();
 
   /*! Start the example */
   void startLoop();
@@ -211,4 +211,4 @@ class FastGetSetDCM : public AL::ALModule
   int numSensors() const;
 };
 
-} /* dcm_module */
+} /* mc_naoqi_dcm */

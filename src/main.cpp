@@ -4,7 +4,7 @@
 #include <alcommon/altoolsmain.h>
 #include <signal.h>
 #include <boost/shared_ptr.hpp>
-#include "fastgetsetdcm.h"
+#include "mc_naoqi_dcm.h"
 
 #ifdef _WIN32
 #define ALCALL __declspec(dllexport)
@@ -21,7 +21,7 @@ ALCALL int _createModule(boost::shared_ptr<AL::ALBroker> pBroker)
   AL::ALBrokerManager::getInstance()->addBroker(pBroker);
 
   // create module instances
-  AL::ALModule::createModule<dcm_module::FastGetSetDCM>(pBroker, "FastGetSetDCM");
+  AL::ALModule::createModule<mc_naoqi_dcm::MCNAOqiDCM>(pBroker, "MCNAOqiDCM");
   return 0;
 }
 

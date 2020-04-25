@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace dcm_module
+namespace mc_naoqi_dcm
 {
 NAORobotModule::NAORobotModule()
 {
@@ -61,4 +61,4 @@ NAORobotModule::NAORobotModule()
   rgbLedGroups.push_back(earsLeds);
 }
 
-} /* dcm_module */
+} /* mc_naoqi_dcm */

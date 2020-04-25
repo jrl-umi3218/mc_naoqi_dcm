@@ -1,9 +1,5 @@
-##
-## Copyright (C) 2009 Aldebaran Robotics
-##
-
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-project(fastgetsetdcm)
+project(mc_naoqi_dcm)
 set(ROBOT_NAME "pepper" CACHE STRING "Build with this robot (pepper|nao)")
 
 find_package(qibuild)

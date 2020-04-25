@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-namespace dcm_module
+namespace mc_naoqi_dcm
 {
 
 struct JointGroup{
@@ -57,4 +57,4 @@ struct RobotModule
                      bool isSensor=false, std::string sensor_prefix="");
 };
 
-} /* dcm_module */
+} /* mc_naoqi_dcm */

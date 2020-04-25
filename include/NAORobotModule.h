@@ -1,7 +1,7 @@
 #pragma once
 #include "RobotModule.h"
 
-namespace dcm_module
+namespace mc_naoqi_dcm
 {
 
 struct NAORobotModule : public RobotModule
@@ -9,4 +9,4 @@ struct NAORobotModule : public RobotModule
   NAORobotModule();
 };
 
-} /* dcm_module */
+} /* mc_naoqi_dcm */

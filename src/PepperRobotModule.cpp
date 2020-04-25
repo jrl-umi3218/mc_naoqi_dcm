@@ -1,6 +1,6 @@
 #include "PepperRobotModule.h"
 
-namespace dcm_module
+namespace mc_naoqi_dcm
 {
 PepperRobotModule::PepperRobotModule() : RobotModule()
 {
@@ -74,4 +74,4 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   iLedGroups.push_back(earsLeds);
 }
 
-} /* dcm_module */
+} /* mc_naoqi_dcm */

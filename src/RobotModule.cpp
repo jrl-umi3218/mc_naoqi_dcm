@@ -1,6 +1,6 @@
 #include "RobotModule.h"
 
-namespace dcm_module
+namespace mc_naoqi_dcm
 {
 
 // Function to create various memory key groups
