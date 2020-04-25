@@ -2,7 +2,7 @@ mc_naoqi_dcm
 ==
 
 Fast communication module with NAO/PEPPER sensors and actuators and `mc_rtc` control framework.
-This is a local robot module, that needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot.
+This is a local robot module, that needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot. Fast access to low level DCM of NAOqi. This module allows to set/get actuator values under 12ms.
 
 ## How to build
 
