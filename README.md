@@ -1,7 +1,7 @@
-fastgetsetdcm
+mc_naoqi_dcm
 ==
 
-Fast communication module with NAO/PEPPER sensors and actuators. 
+Fast communication module with NAO/PEPPER sensors and actuators and `mc_rtc` control framework.
 This is a local robot module, that needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot.
 
 How to build
@@ -12,39 +12,39 @@ First, you'll need to install the NAOqi SDK and building tools. To do so, follow
 As we are cross-compiling, you need to first create a toolchain for the CTC (cross-compilation toolchain).
 
 ```
-qitoolchain create cross-atom /path/to/ctc/toolchain.xml
+qitoolchain create ctc-naoqi-toolchain /path/to/ctc/toolchain.xml
 ```
 
-Add the toolchain to qibuild
-
-```
-qibuild add-config cross-atom --toolchain cross-atom
-```
-
-Create a worktree, and clone the project
-```
-mkdir /path/to/worktree
-cd /path/to/worktree
-git clone <fastgetsetdcm.git>
-```
-
-Now, build the project 
+Create `qibuild` worktree
 
 ```
 qibuild init
-qisrc add fastgetsetdcm
-qibuild configure -c cross-atom fastgetsetdcm
-cd fastgetsetdcm/build-cross-atom
+```
+
+Add the toolchain to qibuild worktree
+
+```
+qibuild add-config tc-naoqi--config -t ctc-naoqi-toolchain --default
+```
+
+Clone this project into `qibuild worktree`
+
+```
+git clone git@gite.lirmm.fr:softbankrobotics/mc_naoqi_dcm.git
+```
+
+Now, build the project
+
+```
 # Choose either "pepper" or "nao"
-cmake .. -DROBOT_NAME=<pepper|nao>
-make
+qibuild configure --release -DROBOT_NAME=<pepper|nao>
+qibuild make
 ```
 
-
-And finally, let's deploy it on the robot:
+Once the local module is built, transfer it to the robot
 
 ```
-qibuild deploy -c cross-atom --url nao@192.168.2.3:naoqi fastgetsetdcm
+scp build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@robot_ip:/home/nao/naoqi/locallib/
 ```
 
 A final step is required to autoload the module on the robot.
@@ -52,10 +52,10 @@ Edit the file ~/naoqi/preferences/autoload.ini on the robot, and add
 
 ```
 [user]
-/home/nao/naoqi/lib/naoqi/libfastgetsetdcm.so
+/home/nao/naoqi/locallib/libmc_naoqi_dcm.so
 ```
 
-You will also need to diable the ALMotion module to prevent it from conflicting with the controls from this module. On NAO, edit the file `/etc/naoqi/autoload.ini`, and comment out the motion module
+You will also need to disable the ALMotion module to prevent it from conflicting with the controls from this module. On robot, edit the file `/etc/naoqi/autoload.ini`, and comment out the motion module
 
 
 ```
@@ -72,5 +72,4 @@ nao stop
 nao start
 ```
 
-More info on http://janebotics.blogspot.fr
-
+The robot is now ready to be controlled via `mc_rtc` controller.
