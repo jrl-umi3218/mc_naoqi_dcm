@@ -19,7 +19,11 @@
 // Used to read values of ALMemory directly in RAM
 #include <almemoryfastaccess/almemoryfastaccess.h>
 
+// Text to speech proxy
 #include <alproxies/altexttospeechproxy.h>
+
+// AlMemory proxy
+#include <alproxies/almemoryproxy.h>
 
 #include <boost/bind.hpp>
 
@@ -85,6 +89,9 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::
   functionName("blink", getName(), "blink");
   BIND_METHOD(FastGetSetDCM::blink);
 
+  functionName("onBumperPressed", getName(), "When the bumper is pressed. Switch off wheels");
+  BIND_METHOD(FastGetSetDCM::onBumperPressed);
+
   #ifdef PEPPER
     // Bind methods specific to Pepper robot
     functionName("setWheelsStiffness", getName(), "change wheels stiffness");
@@ -109,6 +116,13 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::
     dcmProxy = getParentBroker()->getDcmProxy();
   }catch (AL::ALError &e){
     throw ALERROR(getName(), "FastGetSetDCM", "Impossible to create DCM Proxy : " + e.toString());
+  }
+
+  // Get the ALMemory proxy
+  try{
+    memoryProxy = getParentBroker()->getMemoryProxy();
+  }catch (AL::ALError &e){
+    throw ALERROR(getName(), "FastGetSetDCM", "Impossible to create ALMemory Proxy : " + e.toString());
   }
 
   // Check that DCM is running
@@ -156,10 +170,27 @@ FastGetSetDCM::FastGetSetDCM(boost::shared_ptr<AL::ALBroker> broker, const std::
 // Module destructor
 FastGetSetDCM::~FastGetSetDCM()
 {
+  bumperSafetyReflex(false);
   setWheelSpeed(0.0f, 0.0f, 0.0f);
   setStiffness(0.0f);
   setWheelsStiffness(0.0f);
   stopLoop();
+}
+
+// Enable/disable mobile base safety reflex
+void FastGetSetDCM::bumperSafetyReflex(bool state)
+{
+  if(state){
+    // Subscribe to events
+    memoryProxy->subscribeToEvent("RightBumperPressed", "FastGetSetDCM", "onBumperPressed");
+    memoryProxy->subscribeToEvent("LeftBumperPressed", "FastGetSetDCM", "onBumperPressed");
+    memoryProxy->subscribeToEvent("BackBumperPressed", "FastGetSetDCM", "onBumperPressed");
+  }else{
+    // Unsubscribe event callback
+    memoryProxy->unsubscribeToEvent("RightBumperPressed", "FastGetSetDCM");
+    memoryProxy->unsubscribeToEvent("LeftBumperPressed", "FastGetSetDCM");
+    memoryProxy->unsubscribeToEvent("BackBumperPressed", "FastGetSetDCM");
+  }
 }
 
 // Start loop
@@ -175,6 +206,14 @@ void FastGetSetDCM::stopLoop()
   // Remove the preProcess callback connection
   fDCMPreProcessConnection.disconnect();
   preProcessConnected = false;
+}
+
+void FastGetSetDCM::onBumperPressed() {
+  // TODO make thread safe
+
+  // Turn off wheels
+  setWheelsStiffness(0.0f);
+  setWheelSpeed(0.0f, 0.0f, 0.0f);
 }
 
 bool FastGetSetDCM::isPreProccessConnected(){
@@ -345,6 +384,8 @@ void FastGetSetDCM::setStiffness(const float &stiffnessValue)
   }
 }
 
+// This function might be making a copy of the jointValues
+// Can I pass reference as an argument instead? Will it speed up the process?
 void FastGetSetDCM::setJointAngles(std::vector<float> jointValues)
 {
   // update values in the vector that is used to send joint commands every 12ms
@@ -366,6 +407,8 @@ int FastGetSetDCM::numSensors() const
   return robot_module.readSensorKeys.size();
 }
 
+// Method is not synchronized with DCM loop
+// Better approach might be to call GetValues on postprocess of DCM loop
 std::vector<float> FastGetSetDCM::getSensors()
 {
   // Get all values from ALMemory using fastaccess

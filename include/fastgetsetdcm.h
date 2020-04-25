@@ -2,6 +2,7 @@
 #include <alcommon/almodule.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#include <althread/almutex.h>
 #include "RobotModule.h"
 
 namespace AL
@@ -9,6 +10,7 @@ namespace AL
 class ALBroker;
 class ALMemoryFastAccess;
 class DCMProxy;
+class ALMemoryProxy;
 }
 
 namespace dcm_module
@@ -37,6 +39,9 @@ class FastGetSetDCM : public AL::ALModule
 
   /*! Stop the example */
   void stopLoop();
+
+  /*! Enable/disable turning off wheels on bumper pressed */
+  void bumperSafetyReflex(bool state);
 
  private:
   /*! Initialisation of ALMemory/DCM link */
@@ -161,6 +166,14 @@ class FastGetSetDCM : public AL::ALModule
   // Store sensor values.
   std::vector<float> sensorValues;
   boost::shared_ptr<AL::DCMProxy> dcmProxy;
+
+  // Memory proxy
+  boost::shared_ptr<AL::ALMemoryProxy> memoryProxy;
+
+  /**
+  * This method will be called every time the bumper press event is raised
+  */
+  void onBumperPressed();
 
   // Used for sending joint position commands every 12ms in callback
   std::vector<float> jointPositionCommands;
