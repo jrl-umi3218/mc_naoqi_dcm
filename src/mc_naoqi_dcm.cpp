@@ -92,6 +92,10 @@ MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string
   functionName("onBumperPressed", getName(), "When the bumper is pressed. Switch off wheels");
   BIND_METHOD(MCNAOqiDCM::onBumperPressed);
 
+  functionName("bumperSafetyReflex", getName(), "Enable/disable bumper safety reflex");
+  addParam("state", "true to enable, false to disable");
+  BIND_METHOD(MCNAOqiDCM::bumperSafetyReflex);
+
   #ifdef PEPPER
     // Bind methods specific to Pepper robot
     functionName("setWheelsStiffness", getName(), "change wheels stiffness");

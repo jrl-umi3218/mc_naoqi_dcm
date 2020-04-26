@@ -14,7 +14,7 @@ except RuntimeError:
     sys.exit(1)
 
 # Access the module
-fastgetsetdcm_service  = session.service("FastGetSetDCM")
+mcnaoqidcm_service  = session.service("MCNAOqiDCM")
 
 # Check if the callback is connected to DCM loop
-print "Is callback connected to DCM: " + str(fastgetsetdcm_service.isPreProccessConnected())
+print "Is callback connected to DCM: " + str(mcnaoqidcm_service.isPreProccessConnected())
