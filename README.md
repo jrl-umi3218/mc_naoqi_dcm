@@ -45,7 +45,7 @@ qibuild make
 Once the local module is built, transfer it to the robot
 
 ```
-scp build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@robot_ip:/home/nao/naoqi/locallib/
+scp build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@robot_ip:/home/nao/naoqi/
 ```
 
 A final step is required to autoload the module on the robot.
@@ -53,24 +53,14 @@ Edit the file ~/naoqi/preferences/autoload.ini on the robot, and add
 
 ```
 [user]
-/home/nao/naoqi/locallib/libmc_naoqi_dcm.so
-```
-
-You will also need to disable the ALMotion module to prevent it from conflicting with the controls from this module. On robot, edit the file `/etc/naoqi/autoload.ini`, and comment out the motion module
-
-
-```
-...
-# motion
-...
+/home/nao/naoqi/libmc_naoqi_dcm.so
 ```
 
 You can now use it directly by restarting naoqi on the robot.
 Make sure the robot stable before doing so, as it will servo off.
 
 ```
-nao stop
-nao start
+nao restart
 ```
 
-The robot is now ready to be controlled via `mc_rtc` controller.
+The robot is now ready to be controlled via `mc_rtc` controller using `mc_naoqi` interface.
