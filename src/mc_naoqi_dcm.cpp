@@ -65,6 +65,10 @@ MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string
   setReturn("sensors number", "int indicating total number of different sensors");
   BIND_METHOD(MCNAOqiDCM::numSensors);
 
+  functionName("bumperNames", getName(), "get list of bumper sensor names");
+  setReturn("bumper names", "list of bumper sensor names");
+  BIND_METHOD(MCNAOqiDCM::bumperNames);
+
   functionName("getSensors", getName(), "get all sensor values");
   setReturn("sensor values", "array containing values of all the sensors");
   BIND_METHOD(MCNAOqiDCM::getSensors);
@@ -239,6 +243,7 @@ void MCNAOqiDCM::init()
 
   #ifdef PEPPER
     // create wheels speed and stiffness commands
+    // TODO get specialJointGroup by name "wheels"
     const JointGroup& wheels = robot_module.specialJointGroups[0];
     std::string wheelsSpeedAliasName = wheels.groupName+std::string("Speed");
     std::string wheelsStiffnessAliasName = wheels.groupName+std::string("Stiffness");
@@ -407,6 +412,11 @@ std::vector<std::string> MCNAOqiDCM::getSensorsOrder() const
 int MCNAOqiDCM::numSensors() const
 {
   return robot_module.readSensorKeys.size();
+}
+
+std::vector<std::string> MCNAOqiDCM::bumperNames() const
+{
+  return robot_module.bumpers;
 }
 
 // Method is not synchronized with DCM loop

@@ -31,6 +31,11 @@ NAORobotModule::NAORobotModule()
   genMemoryKeys("LFoot/", footFSR, "/Sensor/Value", readSensorKeys, true, "LFoot");
   genMemoryKeys("RFoot/", footFSR, "/Sensor/Value", readSensorKeys, true, "RFoot");
 
+  // Feet bumpers (two per each foot)
+  bumpers = {"LFoot", "RFoot"};
+  genMemoryKeys("", bumpers, "/Bumper/Right/Sensor/Value", readSensorKeys, true);
+  genMemoryKeys("", bumpers, "/Bumper/Left/Sensor/Value", readSensorKeys, true);
+
   // led groups
   rgbLedGroup eyesLeds;
   eyesLeds.groupName = "eyesLeds";

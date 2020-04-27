@@ -50,6 +50,8 @@ struct RobotModule
   std::vector<rgbLedGroup> rgbLedGroups;
   // Groups of single channel leds
   std::vector<iLedGroup> iLedGroups;
+  // Bumpers
+  std::vector<std::string> bumpers;
 
   // Generate memory keys
   void genMemoryKeys(std::string prefix, std::vector<std::string> &devices, std::string postfix,

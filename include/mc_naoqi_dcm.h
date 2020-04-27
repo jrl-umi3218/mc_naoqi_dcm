@@ -209,6 +209,11 @@ class MCNAOqiDCM : public AL::ALModule
    * Allows to pre-set apropriate vector size for storing and updating all sensor readings
    */
   int numSensors() const;
+
+  /**
+   * Bumper sensor names
+   */
+  std::vector<std::string> bumperNames() const;
 };
 
 } /* mc_naoqi_dcm */

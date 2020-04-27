@@ -19,7 +19,7 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   // NB! Joint encoders must be in the beginning of the readSensorKeys/sensors
   genMemoryKeys("", actuators, "/Position/Sensor/Value", readSensorKeys, true, "Encoder");
   genMemoryKeys("", actuators, "/ElectricCurrent/Sensor/Value", readSensorKeys, true, "ElectricCurrent");
-  genMemoryKeys("InertialSensorBase/", imu, "/Sensor/Value", readSensorKeys, true, "");
+  genMemoryKeys("InertialSensorBase/", imu, "/Sensor/Value", readSensorKeys, true);
 
   // wheels - special joint groups
   JointGroup wheels;
@@ -32,8 +32,8 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   genMemoryKeys("", wheels.jointsNames, "/Speed/Sensor/Value", readSensorKeys, true, "Encoder");
 
   // Bumpers
-  std::vector<std::string> bumpers = {"FrontLeft", "FrontRight", "Back"};
-  genMemoryKeys("Platform/", bumpers, "/Bumper/Sensor/Value", readSensorKeys, true, "Bumper");
+  bumpers = {"BumperFrontLeft", "BumperFrontRight", "BumperBack"};
+  genMemoryKeys("Platform/", bumpers, "/Bumper/Sensor/Value", readSensorKeys, true);
 
   // led groups
   rgbLedGroup eyesCenter;
