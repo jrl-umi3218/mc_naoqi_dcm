@@ -23,6 +23,8 @@ This module needs to be cross-compiled and sent to the robot.
 1. Enter previously created **qiBuild worktree**: `cd qiBuild_wt`
 1. Create toolchain build configuration and set it as default in your **qiBuild worktree**: `qibuild add-config naoqi-cct-config -t naoqi-cct --default`
 
+**Note:** For more information or troubleshooting regarding `qiBuild` or `NAOqi C++ SDK` you can see the official [NAOqi C++ SDK installation guide](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/sdks/c-sdk/c-sdk-installation-guide).
+
 ### 3. Clone and build `mc_naoqi_dcm`
 
 1. Clone this project into your **qiBuild worktree**: `git clone git@gite.lirmm.fr:softbankrobotics/mc_naoqi_dcm.git`
@@ -58,3 +60,6 @@ nao restart
 The robot is now ready to be controlled via [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) controller using [`mc_naoqi`](https://gite.lirmm.fr/multi-contact/mc_naoqi) interface.
 
 You can refer to the sample Pepper Finite State Machine (FSM) `mc_rtc` controller  project: [`PepperFSMController`](https://gite.lirmm.fr/mc-controllers/pepperfsmcontroller) for an example (or a starting point) for creating your own `mc_rtc` controller for Pepper.
+
+---
+The URLs in this file were valid on 20.07.20
