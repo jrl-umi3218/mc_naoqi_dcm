@@ -23,7 +23,7 @@ This module needs to be cross-compiled and sent to the robot.
 1. Enter previously created **qiBuild worktree**: `cd qiBuild_wt`
 1. Create toolchain build configuration and set it as default in your **qiBuild worktree**: `qibuild add-config naoqi-cct-config -t naoqi-cct --default`
 
-**Note:** For more information or troubleshooting regarding `qiBuild` or `NAOqi C++ SDK` you can see the official [NAOqi C++ SDK installation guide](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/sdks/c-sdk/c-sdk-installation-guide).
+**Note:** For more information or troubleshooting regarding `qiBuild` or `NAOqi C++ SDK` see the official [NAOqi C++ SDK installation guide](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/sdks/c-sdk/c-sdk-installation-guide).
 
 ### 3. Clone and build `mc_naoqi_dcm`
 
@@ -32,7 +32,7 @@ This module needs to be cross-compiled and sent to the robot.
 1. Configure the project (to build for either Pepper or NAO): `qibuild configure --release -DROBOT_NAME=<pepper|nao>`
 1. Build the local robot module: `qibuild make`
 
-### 4. Run module on the robot
+### 4. Upload module to the robot and configure autoload
 
 1. Transfer `libmc_naoqi_dcm.so` file to the robot:
 ```bash
@@ -46,7 +46,7 @@ ssh nao@<robot_ip>
 ```bash
 nano naoqi/preferences/autoload.ini
 ```
-To contain the following line:
+to contain the following line:
 ```bash
 [user]
 /home/nao/naoqi/libmc_naoqi_dcm.so
@@ -57,7 +57,7 @@ nao restart
 ```
 
 ### 5. All done | Next steps
-The robot is now ready to be controlled via [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) controller using [`mc_naoqi`](https://gite.lirmm.fr/multi-contact/mc_naoqi) interface.
+The robot is now running our uploaded local module `mc_naoqi_dcm` and is ready to be controlled via [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) controller using [`mc_naoqi`](https://gite.lirmm.fr/multi-contact/mc_naoqi) interface.
 
 You can refer to the sample Pepper Finite State Machine (FSM) `mc_rtc` controller  project: [`PepperFSMController`](https://gite.lirmm.fr/mc-controllers/pepperfsmcontroller) for an example (or a starting point) for creating your own `mc_rtc` controller for Pepper.
 
