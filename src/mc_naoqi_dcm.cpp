@@ -73,6 +73,10 @@ MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string
   setReturn("sensor values", "array containing values of all the sensors");
   BIND_METHOD(MCNAOqiDCM::getSensors);
 
+  functionName("getRobotName", getName(), "get robot name");
+  setReturn("robot name", "name of the robot for which module was built <pepper|nao>");
+  BIND_METHOD(MCNAOqiDCM::getRobotName);
+
   functionName("sayText", getName(), "Say a given sentence.");
   addParam("toSay", "The sentence to be said.");
   BIND_METHOD(MCNAOqiDCM::sayText);
@@ -407,6 +411,11 @@ std::vector<std::string> MCNAOqiDCM::getJointOrder() const
 std::vector<std::string> MCNAOqiDCM::getSensorsOrder() const
 {
   return robot_module.sensors;
+}
+
+std::string MCNAOqiDCM::getRobotName() const
+{
+  return robot_module.name;
 }
 
 int MCNAOqiDCM::numSensors() const

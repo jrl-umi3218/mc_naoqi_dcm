@@ -106,6 +106,13 @@ class MCNAOqiDCM : public AL::ALModule
   std::vector<float> getSensors();
 
   /**
+   * @brief Robot name (pepper or nao)
+   *
+   * @return robot name
+   */
+  std::string getRobotName() const;
+
+  /**
    * Make robot say a sentence given in argument
    */
   void sayText(const std::string &toSay);
