@@ -15,15 +15,13 @@ This module needs to be cross-compiled and sent to the robot.
 1. Enter **qiBuild worktree**: `cd qiBuild_wt`
 1. Initialize your worktree: `qibuild init`
 
-### 2. Installing and configuring NAOqi C++ SDK
+### 2. Installing and configuring cross-compilation toolchain
 
-1. Download [NAOqi C++ SDK](https://developer.softbankrobotics.com/pepper-naoqi-25-downloads-linux): `naoqi-sdk-x.x.x-[OS].tar.gz`
-1. Extract this archive into (e.g.) `naoqi-sdk` folder
-1. Create toolchain for cross compilation: `qitoolchain create naoqi-cct naoqi-sdk/toolchain.xml`
+1. Download [Cross Toolchain](https://developer.softbankrobotics.com/pepper-naoqi-25-downloads-linux): `ctc-linux64-atom-x.x.x.x.zip`
+1. Extract this archive into (e.g.) `ctc-naoqi` folder
+1. Create toolchain for cross compilation: `qitoolchain create ctc-naoqi ctc-naoqi/toolchain.xml`
 1. Enter previously created **qiBuild worktree**: `cd qiBuild_wt`
-1. Create toolchain build configuration and set it as default in your **qiBuild worktree**: `qibuild add-config naoqi-cct-config -t naoqi-cct --default`
-
-**Note:** For more information or troubleshooting regarding `qiBuild` or `NAOqi C++ SDK` see the official [NAOqi C++ SDK installation guide](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/sdks/c-sdk/c-sdk-installation-guide).
+1. Create toolchain build configuration and set it as default in your **qiBuild worktree**: `qibuild add-config ctc-naoqi-config -t ctc-naoqi --default`
 
 ### 3. Clone and build `mc_naoqi_dcm`
 
@@ -31,6 +29,11 @@ This module needs to be cross-compiled and sent to the robot.
 1. Enter the project folder: `cd mc_naoqi_dcm`
 1. Configure the project (to build for either Pepper or NAO): `qibuild configure --release -DROBOT_NAME=<pepper|nao>`
 1. Build the local robot module: `qibuild make`
+  * **Note**: you may need to run `export LC_ALL=C` if you encounter the following error:
+  ```bash
+  as: loadlocale.c:129: _nl_intern_locale_data: Assertion `cnt < (sizeof (_nl_value_type_LC_TIME) / sizeof (_nl_value_type_LC_TIME[0]))' failed.
+  ```
+  Then run `qibuild make` again.
 
 ### 4. Upload module to the robot and configure autoload
 
