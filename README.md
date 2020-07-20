@@ -15,7 +15,7 @@ This module needs to be cross-compiled and sent to the robot.
 1. Enter **qiBuild worktree**: `cd qiBuild_wt`
 1. Initialize your worktree: `qibuild init`
 
-### 2. Installing and configuring cross-compilation toolchain
+### 2. Downloading and configuring cross-compilation toolchain
 
 1. Download [Cross Toolchain](https://developer.softbankrobotics.com/pepper-naoqi-25-downloads-linux): `ctc-linux64-atom-x.x.x.x.zip`
 1. Extract this archive into (e.g.) `ctc-naoqi` folder
