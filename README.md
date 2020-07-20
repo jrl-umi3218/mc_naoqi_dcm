@@ -29,11 +29,10 @@ This module needs to be cross-compiled and sent to the robot.
 1. Enter the project folder: `cd mc_naoqi_dcm`
 1. Configure the project (to build for either Pepper or NAO): `qibuild configure --release -DROBOT_NAME=<pepper|nao>`
 1. Build the local robot module: `qibuild make`
-  * **Note**: you may need to run `export LC_ALL=C` if you encounter the following error:
+  * **Note**: you may need to run `export LC_ALL=C` if you encounter the following error while building:
   ```bash
   as: loadlocale.c:129: _nl_intern_locale_data: Assertion `cnt < (sizeof (_nl_value_type_LC_TIME) / sizeof (_nl_value_type_LC_TIME[0]))' failed.
   ```
-  Then run `qibuild make` again.
 
 ### 4. Upload module to the robot and configure autoload
 
@@ -41,11 +40,11 @@ This module needs to be cross-compiled and sent to the robot.
 ```bash
 rsync build-naoqi-cct-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@pepper.local:/home/nao/naoqi/
 ```
-1. Login to robot system:
+2. Login to robot system:
 ```bash
 ssh nao@<robot_ip>
 ```
-1. Configure `mc_naoqi_dcm` module to be auto-loaded when robot starts operating. Modify configuration file:
+3. Configure `mc_naoqi_dcm` module to be auto-loaded when robot starts operating. Modify configuration file:
 ```bash
 nano naoqi/preferences/autoload.ini
 ```
@@ -54,7 +53,7 @@ to contain the following line:
 [user]
 /home/nao/naoqi/libmc_naoqi_dcm.so
 ```
-1. Restart robot system:
+4. Restart robot system:
 ```bash
 nao restart
 ```
