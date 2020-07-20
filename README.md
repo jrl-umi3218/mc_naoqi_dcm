@@ -1,66 +1,60 @@
-mc_naoqi_dcm
-==
+# mc_naoqi_dcm
 
-Fast communication module with NAO/PEPPER sensors and actuators and `mc_rtc` control framework.
-This is a local robot module, that needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot. Fast access to low level DCM of NAOqi. This module allows to set/get actuator values under 12ms.
+Fast communication module between NAO/PEPPER robot sensors and actuators and [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) control framework.
+This is a local robot module, which needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot. This module provides fast access to the low level [Device Communication Manager](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/naoqi-apis/dcm) module of [NAOqi OS](https://developer.softbankrobotics.com/pepper-naoqi-25), it allows to set/get actuator values under 12ms.
 
-## How to build
+## Building
 
-First, you'll need to install the NAOqi SDK and building tools. To do so, follow the [getting started](http://doc.aldebaran.com/qibuild/beginner/getting_started.html) instructions on how to install qibuild and the NAOqi SDK.
+This module needs to be cross-compiled and sent to the robot.
 
-As we are cross-compiling, you need to first create a toolchain for the CTC (cross-compilation toolchain).
+### 1. Installing `qiBuild` and creating a worktree
 
+1. Install **qiBuild**: `pip install qibuild --user`
+1. Configure **qiBuild**: `qibuild config --wizard`
+1. Create a **qiBuild worktree**: `mkdir qiBuild_wt`
+1. Enter **qiBuild worktree**: `cd qiBuild_wt`
+1. Initialize your worktree: `qibuild init`
+
+### 2. Installing and configuring NAOqi C++ SDK
+
+1. Download [NAOqi C++ SDK](https://developer.softbankrobotics.com/pepper-naoqi-25-downloads-linux): `naoqi-sdk-x.x.x-[OS].tar.gz`
+1. Extract this archive into (e.g.) `naoqi-sdk` folder
+1. Create toolchain for cross compilation: `qitoolchain create naoqi-cct naoqi-sdk/toolchain.xml`
+1. Enter previously created **qiBuild worktree**: `cd qiBuild_wt`
+1. Create toolchain build configuration and set it as default in your **qiBuild worktree**: `qibuild add-config naoqi-cct-config -t naoqi-cct --default`
+
+### 3. Clone and build `mc_naoqi_dcm`
+
+1. Clone this project into your **qiBuild worktree**: `git clone git@gite.lirmm.fr:softbankrobotics/mc_naoqi_dcm.git`
+1. Enter the project folder: `cd mc_naoqi_dcm`
+1. Configure the project (to build for either Pepper or NAO): `qibuild configure --release -DROBOT_NAME=<pepper|nao>`
+1. Build the local robot module: `qibuild make`
+
+### 4. Run module on the robot
+
+1. Transfer `libmc_naoqi_dcm.so` file to the robot:
+```bash
+scp build-naoqi-cct-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@<robot_ip>:/home/nao/naoqi/
 ```
-qitoolchain create ctc-naoqi-toolchain /path/to/ctc/toolchain.xml
+1. Login to robot system:
+```bash
+ssh nao@<robot_ip>
 ```
-
-Create `qibuild` worktree
-
+1. Configure `mc_naoqi_dcm` module to be auto-loaded when robot starts operating. Modify configuration file:
+```bash
+nano naoqi/preferences/autoload.ini
 ```
-qibuild init
-```
-
-Add the toolchain to qibuild worktree
-
-```
-qibuild add-config tc-naoqi--config -t ctc-naoqi-toolchain --default
-```
-
-Clone this project into `qibuild worktree`
-
-```
-git clone git@gite.lirmm.fr:softbankrobotics/mc_naoqi_dcm.git
-```
-
-Now, build the project
-
-```
-# Choose either "pepper" or "nao"
-qibuild configure --release -DROBOT_NAME=<pepper|nao>
-qibuild make
-```
-
-## How to use
-
-Once the local module is built, transfer it to the robot
-
-```
-scp build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@robot_ip:/home/nao/naoqi/
-```
-
-A final step is required to autoload the module on the robot.
-Edit the file ~/naoqi/preferences/autoload.ini on the robot, and add
-
-```
+To contain the following line:
+```bash
 [user]
 /home/nao/naoqi/libmc_naoqi_dcm.so
 ```
-
-You can now use it directly by restarting naoqi on the robot.
-Make sure the robot stable before doing so, as it will servo off.
-
-```
+1. Restart robot system:
+```bash
 nao restart
 ```
 
-The robot is now ready to be controlled via `mc_rtc` controller using `mc_naoqi` interface.
+### 5. All done | Next steps
+The robot is now ready to be controlled via [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) controller using [`mc_naoqi`](https://gite.lirmm.fr/multi-contact/mc_naoqi) interface.
+
+You can refer to the sample Pepper Finite State Machine (FSM) `mc_rtc` controller  project: [`PepperFSMController`](https://gite.lirmm.fr/mc-controllers/pepperfsmcontroller) for an example (or a starting point) for creating your own `mc_rtc` controller for Pepper.
