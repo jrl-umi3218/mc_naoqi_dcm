@@ -32,7 +32,7 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   genMemoryKeys("", wheels.jointsNames, "/Speed/Sensor/Value", readSensorKeys, true, "Encoder");
 
   // Bumpers
-  bumpers = {"BumperFrontLeft", "BumperFrontRight", "BumperBack"};
+  bumpers = {"FrontLeft", "FrontRight", "Back"};
   genMemoryKeys("Platform/", bumpers, "/Bumper/Sensor/Value", readSensorKeys, true);
 
   // led groups
