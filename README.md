@@ -38,7 +38,7 @@ This module needs to be cross-compiled and sent to the robot.
 
 1. Transfer `libmc_naoqi_dcm.so` file to the robot:
 ```bash
-rsync build-naoqi-cct-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@pepper.local:/home/nao/naoqi/
+rsync build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@pepper.local:/home/nao/naoqi/
 ```
 2. Login to robot system:
 ```bash
