@@ -69,6 +69,10 @@ MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string
   setReturn("bumper names", "list of bumper sensor names");
   BIND_METHOD(MCNAOqiDCM::bumperNames);
 
+  functionName("wheelNames", getName(), "get list of wheels actuator names");
+  setReturn("wheels names", "list of wheels actuator names");
+  BIND_METHOD(MCNAOqiDCM::wheelNames);
+
   functionName("getSensors", getName(), "get all sensor values");
   setReturn("sensor values", "array containing values of all the sensors");
   BIND_METHOD(MCNAOqiDCM::getSensors);
