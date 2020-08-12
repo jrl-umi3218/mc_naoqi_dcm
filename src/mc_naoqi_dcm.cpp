@@ -247,14 +247,18 @@ void MCNAOqiDCM::init()
 
   #ifdef PEPPER
     // create wheels speed and stiffness commands
-    // TODO get specialJointGroup by name "wheels"
-    const JointGroup& wheels = robot_module.specialJointGroups[0];
-    std::string wheelsSpeedAliasName = wheels.groupName+std::string("Speed");
-    std::string wheelsStiffnessAliasName = wheels.groupName+std::string("Stiffness");
-    createAliasPrepareCommand(wheelsSpeedAliasName, wheels.setActuatorKeys, wheelsCommands);
-    createAliasPrepareCommand(wheelsStiffnessAliasName, wheels.setHardnessKeys, wheelsStiffnessCommands);
-    // keep wheels turned off at initialization
-    setWheelsStiffness(0.0f);
+    for (size_t i = 0; i < robot_module.specialJointGroups.size(); i++) {
+      if(robot_module.specialJointGroups[i].groupName == "wheels"){
+        const JointGroup& wheels = robot_module.specialJointGroups[i];
+        std::string wheelsSpeedAliasName = wheels.groupName+std::string("Speed");
+        std::string wheelsStiffnessAliasName = wheels.groupName+std::string("Stiffness");
+        createAliasPrepareCommand(wheelsSpeedAliasName, wheels.setActuatorKeys, wheelsCommands);
+        createAliasPrepareCommand(wheelsStiffnessAliasName, wheels.setHardnessKeys, wheelsStiffnessCommands);
+        // keep wheels turned off at initialization
+        setWheelsStiffness(0.0f);
+        break;
+      }
+    }
   #endif
 }
 
