@@ -430,6 +430,18 @@ std::vector<std::string> MCNAOqiDCM::bumperNames() const
   return robot_module.bumpers;
 }
 
+std::vector<std::string> MCNAOqiDCM::wheelNames() const
+{
+  std::vector<std::string> wheelNames;
+  for (size_t i = 0; i < robot_module.specialJointGroups.size(); i++) {
+    if(robot_module.specialJointGroups[i].groupName == "wheels"){
+      wheelNames = robot_module.specialJointGroups[i].jointsNames;
+      break;
+    }
+  }
+  return wheelNames;
+}
+
 // Method is not synchronized with DCM loop
 // Better approach might be to call GetValues on postprocess of DCM loop
 std::vector<float> MCNAOqiDCM::getSensors()

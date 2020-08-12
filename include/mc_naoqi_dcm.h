@@ -219,6 +219,11 @@ class MCNAOqiDCM : public AL::ALModule
    * Bumper sensor names
    */
   std::vector<std::string> bumperNames() const;
+
+  /**
+   * Ordered wheels actuator names
+   */
+  std::vector<std::string> wheelNames() const;
 };
 
 } /* mc_naoqi_dcm */
