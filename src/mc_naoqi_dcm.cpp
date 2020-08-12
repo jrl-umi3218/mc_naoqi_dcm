@@ -221,8 +221,6 @@ void MCNAOqiDCM::stopLoop()
 }
 
 void MCNAOqiDCM::onBumperPressed() {
-  // TODO make thread safe
-
   // Turn off wheels
   setWheelsStiffness(0.0f);
   setWheelSpeed(0.0f, 0.0f, 0.0f);
@@ -503,29 +501,30 @@ void MCNAOqiDCM::setLeds(std::string ledGroupName, const float &r, const float &
     throw ALERROR(getName(), "changeShouldersLeds()", "Error on DCM getTime : " + e.toString());
   }
 
-  // TODO: proceed only if such led group exists!
-  std::vector<AL::ALValue> &rgbCmnds = ledCmdMap[ledGroupName];
+  if(ledCmdMap.find(ledGroupName) != ledCmdMap.end()){
+    std::vector<AL::ALValue> &rgbCmnds = ledCmdMap[ledGroupName];
 
-  qiLogInfo("rgbCmnds[0].getSize()") << rgbCmnds[0].getSize() << std::endl;
-  qiLogInfo("rgbCmnds[0][5].getSize()") << rgbCmnds[0][5].getSize() << std::endl;
+    qiLogInfo("rgbCmnds[0].getSize()") << rgbCmnds[0].getSize() << std::endl;
+    qiLogInfo("rgbCmnds[0][5].getSize()") << rgbCmnds[0][5].getSize() << std::endl;
 
-  rgbCmnds[0][4][0] = DCMtime;
-  rgbCmnds[1][4][0] = DCMtime;
-  rgbCmnds[2][4][0] = DCMtime;
+    rgbCmnds[0][4][0] = DCMtime;
+    rgbCmnds[1][4][0] = DCMtime;
+    rgbCmnds[2][4][0] = DCMtime;
 
-  // set RGB values for every memory key of this led group
-  for (int i = 0; i < rgbCmnds[0][5].getSize(); i++){
-    rgbCmnds[0][5][i][0] = r;
-    rgbCmnds[1][5][i][0] = g;
-    rgbCmnds[2][5][i][0] = b;
-  }
+    // set RGB values for every memory key of this led group
+    for (int i = 0; i < rgbCmnds[0][5].getSize(); i++){
+      rgbCmnds[0][5][i][0] = r;
+      rgbCmnds[1][5][i][0] = g;
+      rgbCmnds[2][5][i][0] = b;
+    }
 
-  try{
-    dcmProxy->setAlias(rgbCmnds[0]);
-    dcmProxy->setAlias(rgbCmnds[1]);
-    dcmProxy->setAlias(rgbCmnds[2]);
-  }catch (const AL::ALError &e){
-    throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
+    try{
+      dcmProxy->setAlias(rgbCmnds[0]);
+      dcmProxy->setAlias(rgbCmnds[1]);
+      dcmProxy->setAlias(rgbCmnds[2]);
+    }catch (const AL::ALError &e){
+      throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
+    }
   }
 }
 
@@ -538,29 +537,30 @@ void MCNAOqiDCM::setLedsDelay(std::string ledGroupName, const float &r, const fl
     throw ALERROR(getName(), "changeShouldersLeds()", "Error on DCM getTime : " + e.toString());
   }
 
-  // TODO: proceed only if such led group exists!
-  std::vector<AL::ALValue> &rgbCmnds = ledCmdMap[ledGroupName];
+  if(ledCmdMap.find(ledGroupName) != ledCmdMap.end()){
+    std::vector<AL::ALValue> &rgbCmnds = ledCmdMap[ledGroupName];
 
-  qiLogInfo("rgbCmnds[0].getSize()") << rgbCmnds[0].getSize() << std::endl;
-  qiLogInfo("rgbCmnds[0][5].getSize()") << rgbCmnds[0][5].getSize() << std::endl;
+    qiLogInfo("rgbCmnds[0].getSize()") << rgbCmnds[0].getSize() << std::endl;
+    qiLogInfo("rgbCmnds[0][5].getSize()") << rgbCmnds[0][5].getSize() << std::endl;
 
-  rgbCmnds[0][4][0] = DCMtime;
-  rgbCmnds[1][4][0] = DCMtime;
-  rgbCmnds[2][4][0] = DCMtime;
+    rgbCmnds[0][4][0] = DCMtime;
+    rgbCmnds[1][4][0] = DCMtime;
+    rgbCmnds[2][4][0] = DCMtime;
 
-  // set RGB values for every memory key of this led group
-  for (int i = 0; i < rgbCmnds[0][5].getSize(); i++){
-    rgbCmnds[0][5][i][0] = r;
-    rgbCmnds[1][5][i][0] = g;
-    rgbCmnds[2][5][i][0] = b;
-  }
+    // set RGB values for every memory key of this led group
+    for (int i = 0; i < rgbCmnds[0][5].getSize(); i++){
+      rgbCmnds[0][5][i][0] = r;
+      rgbCmnds[1][5][i][0] = g;
+      rgbCmnds[2][5][i][0] = b;
+    }
 
-  try{
-    dcmProxy->setAlias(rgbCmnds[0]);
-    dcmProxy->setAlias(rgbCmnds[1]);
-    dcmProxy->setAlias(rgbCmnds[2]);
-  }catch (const AL::ALError &e){
-    throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
+    try{
+      dcmProxy->setAlias(rgbCmnds[0]);
+      dcmProxy->setAlias(rgbCmnds[1]);
+      dcmProxy->setAlias(rgbCmnds[2]);
+    }catch (const AL::ALError &e){
+      throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
+    }
   }
 }
 
