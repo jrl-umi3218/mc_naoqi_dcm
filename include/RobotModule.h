@@ -52,6 +52,8 @@ struct RobotModule
   std::vector<iLedGroup> iLedGroups;
   // Bumpers
   std::vector<std::string> bumpers;
+  // Tactile sensors
+  std::vector<std::string> tactile;
 
   // Generate memory keys
   void genMemoryKeys(std::string prefix, std::vector<std::string> &devices, std::string postfix,

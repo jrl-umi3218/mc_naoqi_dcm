@@ -35,6 +35,10 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   bumpers = {"FrontLeft", "FrontRight", "Back"};
   genMemoryKeys("Platform/", bumpers, "/Bumper/Sensor/Value", readSensorKeys, true);
 
+  // Tactile sensors
+  tactile = {"Head/Touch/Front", "Head/Touch/Rear", "Head/Touch/Middle", "RHand/Touch/Back", "LHand/Touch/Back"};
+  genMemoryKeys("", tactile, "/Sensor/Value", readSensorKeys, true);
+
   // led groups
   rgbLedGroup eyesCenter;
   eyesCenter.groupName = "eyesCenter";

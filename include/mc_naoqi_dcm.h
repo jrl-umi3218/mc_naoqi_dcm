@@ -221,6 +221,11 @@ class MCNAOqiDCM : public AL::ALModule
   std::vector<std::string> bumperNames() const;
 
   /**
+   * Tactile sensor names
+   */
+  std::vector<std::string> tactileSensorNames() const;
+
+  /**
    * Ordered wheels actuator names
    */
   std::vector<std::string> wheelNames() const;

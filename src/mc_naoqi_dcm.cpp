@@ -69,6 +69,10 @@ MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string
   setReturn("bumper names", "list of bumper sensor names");
   BIND_METHOD(MCNAOqiDCM::bumperNames);
 
+  functionName("tactileSensorNames", getName(), "get list of tactilr sensor names");
+  setReturn("tactile sensor names", "list of tactile sensor names");
+  BIND_METHOD(MCNAOqiDCM::tactileSensorNames);
+
   functionName("wheelNames", getName(), "get list of wheels actuator names");
   setReturn("wheels names", "list of wheels actuator names");
   BIND_METHOD(MCNAOqiDCM::wheelNames);
@@ -432,6 +436,11 @@ int MCNAOqiDCM::numSensors() const
 std::vector<std::string> MCNAOqiDCM::bumperNames() const
 {
   return robot_module.bumpers;
+}
+
+std::vector<std::string> MCNAOqiDCM::tactileSensorNames() const
+{
+  return robot_module.tactile;
 }
 
 std::vector<std::string> MCNAOqiDCM::wheelNames() const
