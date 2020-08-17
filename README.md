@@ -25,7 +25,7 @@ This module needs to be cross-compiled and sent to the robot.
 
 ### 3. Clone and build `mc_naoqi_dcm`
 
-1. Clone this project into your **qiBuild worktree**: `git clone git@gite.lirmm.fr:softbankrobotics/mc_naoqi_dcm.git`
+1. Clone this project into your **qiBuild worktree**: `git clone https://github.com/jrl-umi3218/mc_naoqi_dcm.git`
 1. Enter the project folder: `cd mc_naoqi_dcm`
 1. Configure the project (to build for either Pepper or NAO): `qibuild configure --release -DROBOT_NAME=<pepper|nao>`
 1. Build the local robot module: `qibuild make`
@@ -59,9 +59,9 @@ nao restart
 ```
 
 ### 5. All done | Next steps
-The robot is now running our uploaded local module `mc_naoqi_dcm` and is ready to be controlled via [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) controller using [`mc_naoqi`](https://gite.lirmm.fr/multi-contact/mc_naoqi) interface.
+The robot is now running our uploaded local module `mc_naoqi_dcm` and is ready to be controlled via [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) controller using [`mc_naoqi`](https://github.com/jrl-umi3218/mc_naoqi) interface.
 
-You can refer to the sample Pepper Finite State Machine (FSM) `mc_rtc` controller  project: [`PepperFSMController`](https://gite.lirmm.fr/mc-controllers/pepperfsmcontroller) for an example (or a starting point) for creating your own `mc_rtc` controller for Pepper.
+You can refer to the sample Pepper Finite State Machine (FSM) `mc_rtc` controller  project: [`PepperFSMController`](https://github.com/jrl-umi3218/pepper-fsm-controller) for an example (or a starting point) for creating your own `mc_rtc` controller for Pepper.
 
 ---
 The URLs in this file were valid on 20.07.20
