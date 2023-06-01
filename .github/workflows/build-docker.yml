@@ -1,0 +1,77 @@
+name: CI of mc_naoqi_dcm with Docker
+
+# This workflow checks the build-and-install script on base docker images
+
+on:
+  push:
+    paths-ignore:
+      # Changes to those files don't mandate running CI
+      - ".gitlab-ci.yml"
+      - ".jrl-ci"
+      - ".github/workflows/package.yml"
+      - "debian/**"
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu_20.04"]
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Build within Docker (Pepper)
+      run: |
+        echo "::group::Setup Dockerfile"
+        mkdir -p /tmp/mc_naoqi_dcm-docker
+        cp -r `pwd` /tmp/mc_naoqi_dcm-docker/mc_naoqi_dcm
+        cp .github/workflows/docker/Dockerfile.${{ matrix.os }} /tmp/mc_naoqi_dcm-docker/Dockerfile
+        cd /tmp/mc_naoqi_dcm-docker
+        echo "::endgroup::"
+        echo "::group::Dockerfile used to build mc_naoqi_dcm"
+        cat Dockerfile
+        echo "::endgroup::"
+        echo "::group::Build base image"
+        docker build -t mc_naoqi_dcm-ci-${{matrix.os}}-pepper .
+        echo "::endgroup::"
+        echo "::group::Copy built library"
+        id=$(docker create mc_naoqi_dcm-ci-${{matrix.os}}-pepper)
+        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_pepper.so 
+        docker rm -v $id
+        echo "::endgroup::"
+    - name: Upload library as artefact (pepper)
+      uses: actions/upload-artifact@master
+      with:
+        name: libmc_naoqi_dcm_pepper.so 
+        path: /tmp/libmc_naoqi_dcm_pepper.so
+    - name: Build within Docker (NAO)
+      run: |
+        echo "::group::Setup Dockerfile"
+        mkdir -p /tmp/mc_naoqi_dcm-docker-nao
+        cp -r `pwd` /tmp/mc_naoqi_dcm-docker-nao/mc_naoqi_dcm
+        sed 's/ROBOT_NAME=pepper/ROBOT_NAME=nao/g' .github/workflows/docker/Dockerfile.${{ matrix.os }} | tee /tmp/mc_naoqi_dcm-docker-nao/Dockerfile
+        cd /tmp/mc_naoqi_dcm-docker-nao
+        echo "::endgroup::"
+        echo "::group::Dockerfile used to build mc_naoqi_dcm"
+        cat Dockerfile
+        echo "::endgroup::"
+        echo "::group::Build base image"
+        docker build -t mc_naoqi_dcm-ci-${{matrix.os}}-nao .
+        echo "::endgroup::"
+        echo "::group::Copy built library"
+        id=$(docker create mc_naoqi_dcm-ci-${{matrix.os}}-nao)
+        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_nao.so 
+        docker rm -v $id
+        echo "::endgroup::"
+    - name: Upload library as artefact (NAO)
+      uses: actions/upload-artifact@master
+      with:
+        name: libmc_naoqi_dcm_nao.so 
+        path: /tmp/libmc_naoqi_dcm_nao.so
