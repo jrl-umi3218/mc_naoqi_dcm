@@ -27,7 +27,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: Build within Docker
+    - name: Build within Docker (Pepper)
       run: |
         echo "::group::Setup Dockerfile"
         mkdir -p /tmp/mc_naoqi_dcm-docker
@@ -39,23 +39,39 @@ jobs:
         cat Dockerfile
         echo "::endgroup::"
         echo "::group::Build base image"
-        docker build -t mc_naoqi_dcm-ci-${{matrix.os}} .
+        docker build -t mc_naoqi_dcm-ci-${{matrix.os}}-pepper .
         echo "::endgroup::"
         echo "::group::Copy built library"
-        id=$(docker create mc_naoqi_dcm-ci-${{matrix.os}})
-        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm.so 
+        id=$(docker create mc_naoqi_dcm-ci-${{matrix.os}}-pepper)
+        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_pepper.so 
         docker rm -v $id
         echo "::endgroup::"
-    - name: Upload build
+    - name: Upload library as artefact (pepper)
       uses: actions/upload-artifact@master
       with:
-        name: libmc_naoqi_dcm.so 
-        path: /tmp/libmc_naoqi_dcm.so
-    # - name: Slack Notification
-    #   if: failure()
-    #   uses: archive/github-actions-slack@master
-    #   with:
-    #     slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_TOKEN }}
-    #     slack-channel: '#ci'
-    #     slack-text: >
-    #       [mc_naoqi_dcm] Build *${{ matrix.os }}* failed on ${{ github.ref }}
+        name: libmc_naoqi_dcm_pepper.so 
+        path: /tmp/libmc_naoqi_dcm_pepper.so
+    - name: Build within Docker (NAO)
+      run: |
+        echo "::group::Setup Dockerfile"
+        mkdir -p /tmp/mc_naoqi_dcm-docker-nao
+        cp -r `pwd` /tmp/mc_naoqi_dcm-docker-nao/mc_naoqi_dcm
+        sed 's/ROBOT_NAME=pepper/ROBOT_NAME=nao/g' .github/workflows/docker/Dockerfile.${{ matrix.os }} | tee /tmp/mc_naoqi_dcm-docker-nao/Dockerfile
+        cd /tmp/mc_naoqi_dcm-docker-nao
+        echo "::endgroup::"
+        echo "::group::Dockerfile used to build mc_naoqi_dcm"
+        cat Dockerfile
+        echo "::endgroup::"
+        echo "::group::Build base image"
+        docker build -t mc_naoqi_dcm-ci-${{matrix.os}}-nao .
+        echo "::endgroup::"
+        echo "::group::Copy built library"
+        id=$(docker create mc_naoqi_dcm-ci-${{matrix.os}}-nao)
+        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_nao.so 
+        docker rm -v $id
+        echo "::endgroup::"
+    - name: Upload library as artefact (NAO)
+      uses: actions/upload-artifact@master
+      with:
+        name: libmc_naoqi_dcm_nao.so 
+        path: /tmp/libmc_naoqi_dcm_nao.so
