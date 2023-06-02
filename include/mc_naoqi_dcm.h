@@ -1,8 +1,9 @@
 #pragma once
 #include <alcommon/almodule.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/shared_ptr.hpp>
 #include <althread/almutex.h>
+
+#include <boost/shared_ptr.hpp>
+
 #include "RobotModule.h"
 
 namespace AL
@@ -11,7 +12,7 @@ class ALBroker;
 class ALMemoryFastAccess;
 class DCMProxy;
 class ALMemoryProxy;
-}
+} // namespace AL
 
 namespace mc_naoqi_dcm
 {
@@ -22,15 +23,14 @@ namespace mc_naoqi_dcm
  */
 class MCNAOqiDCM : public AL::ALModule
 {
- public:
+public:
   /**
    * @brief Module to use fast method to get/set joints every 12ms with minimum delays.
    *
    * @param broker A smart pointer to the broker (communication object)
    * @param name The name of the module
    */
-  MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> pBroker,
-                const std::string &pName);
+  MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> pBroker, const std::string & pName);
 
   virtual ~MCNAOqiDCM();
 
@@ -43,7 +43,7 @@ class MCNAOqiDCM : public AL::ALModule
   /*! Enable/disable turning off wheels on bumper pressed */
   void bumperSafetyReflex(bool state);
 
- private:
+private:
   /*! Initialisation of ALMemory/DCM link */
   void init();
 
@@ -54,15 +54,15 @@ class MCNAOqiDCM : public AL::ALModule
   void connectToDCMloop();
 
   /**
-  * @brief Callback called by the DCM every 12ms
-  *
-  *  Once this method is connected to DCM preprocess
-  *  it will be called in Real Time every 12 milliseconds from DCM thread
-  *  Dynamic allocation and system call are strictly forbidden in this method
-  *  Computation time in this section must remain as short as possible to prevent
-  *  erratic move or joint getting loose.
-  *
-  */
+   * @brief Callback called by the DCM every 12ms
+   *
+   *  Once this method is connected to DCM preprocess
+   *  it will be called in Real Time every 12 milliseconds from DCM thread
+   *  Dynamic allocation and system call are strictly forbidden in this method
+   *  Computation time in this section must remain as short as possible to prevent
+   *  erratic move or joint getting loose.
+   *
+   */
   void synchronisedDCMcallback();
 
   /**
@@ -71,7 +71,7 @@ class MCNAOqiDCM : public AL::ALModule
    * @param stiffnessValue
    * Stiffness value that will be applied to all joints
    */
-  void setStiffness(const float &stiffnessValue);
+  void setStiffness(const float & stiffnessValue);
 
   /**
    * @brief Sets the desired actuator position to the specified one.
@@ -115,15 +115,15 @@ class MCNAOqiDCM : public AL::ALModule
   /**
    * Make robot say a sentence given in argument
    */
-  void sayText(const std::string &toSay);
+  void sayText(const std::string & toSay);
 
   /**
    * Create DCM alias and prepare command (ALValue structure) for it
    */
   void createAliasPrepareCommand(std::string aliasName,
-                                 const std::vector<std::string> &mem_keys,
-                                 AL::ALValue& ledCommands,
-                                 std::string updateType="ClearAll");
+                                 const std::vector<std::string> & mem_keys,
+                                 AL::ALValue & ledCommands,
+                                 std::string updateType = "ClearAll");
   // Create aliases for all leg groups defined in robot module
   void createLedAliases();
 
@@ -133,7 +133,7 @@ class MCNAOqiDCM : public AL::ALModule
    * @param stiffnessValue
    * Stiffness value that will be applied to all wheels
    */
-  void setWheelsStiffness(const float &stiffnessValue);
+  void setWheelsStiffness(const float & stiffnessValue);
 
   /**
    * @brief Set speed values to the wheels
@@ -145,20 +145,20 @@ class MCNAOqiDCM : public AL::ALModule
    * @param speed_b
    * Speed value that will be applied to back wheel
    */
-  void setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b);
+  void setWheelSpeed(const float & speed_fl, const float & speed_fr, const float & speed_b);
 
   // one led set function for all groups
-  void setLeds(std::string ledGroupName, const float &r, const float &g, const float &b);
-  void setLedsDelay(std::string ledGroupName, const float &r, const float &g, const float &b, const int& delay);
+  void setLeds(std::string ledGroupName, const float & r, const float & g, const float & b);
+  void setLedsDelay(std::string ledGroupName, const float & r, const float & g, const float & b, const int & delay);
   // Note: cannot bind mathods with the same name and different arguments
-  void isetLeds(std::string ledGroupName, const float &intensity);
+  void isetLeds(std::string ledGroupName, const float & intensity);
   // blink
   void blink();
 
   // check if preProces is connected
   bool isPreProccessConnected();
 
- private:
+private:
   // Used for preprocess sync with the DCM
   ProcessSignalConnection fDCMPreProcessConnection;
 
@@ -176,8 +176,8 @@ class MCNAOqiDCM : public AL::ALModule
   boost::shared_ptr<AL::ALMemoryProxy> memoryProxy;
 
   /**
-  * This method will be called every time the bumper press event is raised
-  */
+   * This method will be called every time the bumper press event is raised
+   */
   void onBumperPressed();
 
   // Used for sending joint position commands every 12ms in callback
@@ -231,4 +231,4 @@ class MCNAOqiDCM : public AL::ALModule
   std::vector<std::string> wheelNames() const;
 };
 
-} /* mc_naoqi_dcm */
+} // namespace mc_naoqi_dcm

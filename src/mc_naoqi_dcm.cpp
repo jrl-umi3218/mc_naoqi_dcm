@@ -3,15 +3,17 @@
 /// Implemented for both NAO and PEPPER robots.
 
 #include "mc_naoqi_dcm.h"
+
 #include <alcommon/albroker.h>
 #include <alcommon/almodule.h>
 #include <alcommon/alproxy.h>
-#include <algorithm>
+#include <alerror/alerror.h>
+
 #include <boost/shared_ptr.hpp>
+#include <algorithm>
+
 #include "NAORobotModule.h"
 #include "PepperRobotModule.h"
-
-#include <alerror/alerror.h>
 
 // Use DCM proxy
 #include <alproxies/dcmproxy.h>
@@ -29,8 +31,8 @@
 
 namespace mc_naoqi_dcm
 {
-MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string &name)
-    : AL::ALModule(broker, name), fMemoryFastAccess(boost::shared_ptr<AL::ALMemoryFastAccess>(new AL::ALMemoryFastAccess()))
+MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string & name)
+: AL::ALModule(broker, name), fMemoryFastAccess(boost::shared_ptr<AL::ALMemoryFastAccess>(new AL::ALMemoryFastAccess()))
 {
   setModuleDescription("Module to communicate with mc_rtc_naoqi interface for whole-body control via mc_rtc framework");
 
@@ -112,48 +114,58 @@ MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string
   addParam("state", "true to enable, false to disable");
   BIND_METHOD(MCNAOqiDCM::bumperSafetyReflex);
 
-  #ifdef PEPPER
-    // Bind methods specific to Pepper robot
-    functionName("setWheelsStiffness", getName(), "change wheels stiffness");
-    addParam("value", "new stiffness value from 0.0 to 1.0");
-    BIND_METHOD(MCNAOqiDCM::setWheelsStiffness);
+#ifdef PEPPER
+  // Bind methods specific to Pepper robot
+  functionName("setWheelsStiffness", getName(), "change wheels stiffness");
+  addParam("value", "new stiffness value from 0.0 to 1.0");
+  BIND_METHOD(MCNAOqiDCM::setWheelsStiffness);
 
-    functionName("setWheelSpeed", getName(), "change wheel speed");
-    addParam("speed_fl", "front left wheel speed");
-    addParam("speed_fr", "front right wheel speed");
-    addParam("speed_b", "back wheel speed");
-    BIND_METHOD(MCNAOqiDCM::setWheelSpeed);
+  functionName("setWheelSpeed", getName(), "change wheel speed");
+  addParam("speed_fl", "front left wheel speed");
+  addParam("speed_fr", "front right wheel speed");
+  addParam("speed_b", "back wheel speed");
+  BIND_METHOD(MCNAOqiDCM::setWheelSpeed);
 
-    // Create Pepper robot module
-    robot_module = PepperRobotModule();
-  #else
-    // Create NAO robot module
-    robot_module = NAORobotModule();
-  #endif
+  // Create Pepper robot module
+  robot_module = PepperRobotModule();
+#else
+  // Create NAO robot module
+  robot_module = NAORobotModule();
+#endif
 
   // Get the DCM proxy
-  try{
+  try
+  {
     dcmProxy = getParentBroker()->getDcmProxy();
-  }catch (AL::ALError &e){
+  }
+  catch(AL::ALError & e)
+  {
     throw ALERROR(getName(), "MCNAOqiDCM", "Impossible to create DCM Proxy : " + e.toString());
   }
 
   // Get the ALMemory proxy
-  try{
+  try
+  {
     memoryProxy = getParentBroker()->getMemoryProxy();
-  }catch (AL::ALError &e){
+  }
+  catch(AL::ALError & e)
+  {
     throw ALERROR(getName(), "MCNAOqiDCM", "Impossible to create ALMemory Proxy : " + e.toString());
   }
 
   // Check that DCM is running
   signed long isDCMRunning;
-  try{
+  try
+  {
     isDCMRunning = getParentBroker()->getProxy("ALLauncher")->call<bool>("isModulePresent", std::string("DCM"));
-  }catch (AL::ALError &e){
+  }
+  catch(AL::ALError & e)
+  {
     throw ALERROR(getName(), "MCNAOqiDCM", "Error when connecting to DCM : " + e.toString());
   }
 
-  if (!isDCMRunning){
+  if(!isDCMRunning)
+  {
     throw ALERROR(getName(), "MCNAOqiDCM", "Error no DCM running ");
   }
 
@@ -164,25 +176,33 @@ MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string
   fMemoryFastAccess->GetValues(sensorValues);
 
   // Save initial sensor values into 'jointPositionCommands'
-  for (int i = 0; i < robot_module.actuators.size(); i++){
+  for(int i = 0; i < robot_module.actuators.size(); i++)
+  {
     jointPositionCommands.push_back(sensorValues[i]);
   }
 
   // Send initial command to the actuators
   int DCMtime;
-  try{
+  try
+  {
     // Get absolute time, at 0 ms in the future ( i.e. now )
     DCMtime = dcmProxy->getTime(0);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "MCNAOqiDCM", "Error on DCM getTime : " + e.toString());
   }
   commands[4][0] = DCMtime;
-  for (unsigned i = 0; i < robot_module.actuators.size(); i++){
+  for(unsigned i = 0; i < robot_module.actuators.size(); i++)
+  {
     commands[5][i][0] = jointPositionCommands[i];
   }
-  try{
+  try
+  {
     dcmProxy->setAlias(commands);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "MCNAOqiDCM", "Error when sending command to DCM : " + e.toString());
   }
 }
@@ -200,12 +220,15 @@ MCNAOqiDCM::~MCNAOqiDCM()
 // Enable/disable mobile base safety reflex
 void MCNAOqiDCM::bumperSafetyReflex(bool state)
 {
-  if(state){
+  if(state)
+  {
     // Subscribe to events
     memoryProxy->subscribeToEvent("RightBumperPressed", "MCNAOqiDCM", "onBumperPressed");
     memoryProxy->subscribeToEvent("LeftBumperPressed", "MCNAOqiDCM", "onBumperPressed");
     memoryProxy->subscribeToEvent("BackBumperPressed", "MCNAOqiDCM", "onBumperPressed");
-  }else{
+  }
+  else
+  {
     // Unsubscribe event callback
     memoryProxy->unsubscribeToEvent("RightBumperPressed", "MCNAOqiDCM");
     memoryProxy->unsubscribeToEvent("LeftBumperPressed", "MCNAOqiDCM");
@@ -228,13 +251,15 @@ void MCNAOqiDCM::stopLoop()
   preProcessConnected = false;
 }
 
-void MCNAOqiDCM::onBumperPressed() {
+void MCNAOqiDCM::onBumperPressed()
+{
   // Turn off wheels
   setWheelsStiffness(0.0f);
   setWheelSpeed(0.0f, 0.0f, 0.0f);
 }
 
-bool MCNAOqiDCM::isPreProccessConnected(){
+bool MCNAOqiDCM::isPreProccessConnected()
+{
   return preProcessConnected;
 }
 
@@ -251,33 +276,36 @@ void MCNAOqiDCM::init()
   // prepare commands for all led groups of robot_module
   createLedAliases();
 
-  #ifdef PEPPER
-    // create wheels speed and stiffness commands
-    for (size_t i = 0; i < robot_module.specialJointGroups.size(); i++) {
-      if(robot_module.specialJointGroups[i].groupName == "wheels"){
-        const JointGroup& wheels = robot_module.specialJointGroups[i];
-        std::string wheelsSpeedAliasName = wheels.groupName+std::string("Speed");
-        std::string wheelsStiffnessAliasName = wheels.groupName+std::string("Stiffness");
-        createAliasPrepareCommand(wheelsSpeedAliasName, wheels.setActuatorKeys, wheelsCommands);
-        createAliasPrepareCommand(wheelsStiffnessAliasName, wheels.setHardnessKeys, wheelsStiffnessCommands);
-        // keep wheels turned off at initialization
-        setWheelsStiffness(0.0f);
-        break;
-      }
+#ifdef PEPPER
+  // create wheels speed and stiffness commands
+  for(size_t i = 0; i < robot_module.specialJointGroups.size(); i++)
+  {
+    if(robot_module.specialJointGroups[i].groupName == "wheels")
+    {
+      const JointGroup & wheels = robot_module.specialJointGroups[i];
+      std::string wheelsSpeedAliasName = wheels.groupName + std::string("Speed");
+      std::string wheelsStiffnessAliasName = wheels.groupName + std::string("Stiffness");
+      createAliasPrepareCommand(wheelsSpeedAliasName, wheels.setActuatorKeys, wheelsCommands);
+      createAliasPrepareCommand(wheelsStiffnessAliasName, wheels.setHardnessKeys, wheelsStiffnessCommands);
+      // keep wheels turned off at initialization
+      setWheelsStiffness(0.0f);
+      break;
     }
-  #endif
+  }
+#endif
 }
 
-void MCNAOqiDCM::initFastAccess(){
+void MCNAOqiDCM::initFastAccess()
+{
   // Create the fast memory access to read sensor values
   fMemoryFastAccess->ConnectToVariables(getParentBroker(), robot_module.readSensorKeys, false);
 }
 
-
 void MCNAOqiDCM::createAliasPrepareCommand(std::string aliasName,
-                const std::vector<std::string> &mem_keys,
-                AL::ALValue& alias_command, std::string updateType){
-
+                                           const std::vector<std::string> & mem_keys,
+                                           AL::ALValue & alias_command,
+                                           std::string updateType)
+{
   // create alias (unite group of memory keys under specific alis name)
   AL::ALValue alias;
   // 2 - for alias name and array of alias memory keys
@@ -286,14 +314,18 @@ void MCNAOqiDCM::createAliasPrepareCommand(std::string aliasName,
   alias[1].arraySetSize(mem_keys.size());
 
   // fill in array of memory keys of the alias
-  for (unsigned i = 0; i < mem_keys.size(); ++i){
+  for(unsigned i = 0; i < mem_keys.size(); ++i)
+  {
     alias[1][i] = mem_keys[i];
   }
 
   // Create alias in DCM
-  try{
+  try
+  {
     dcmProxy->createAlias(alias);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "createLedAlias()", "Error when creating Alias : " + e.toString());
   }
 
@@ -308,7 +340,8 @@ void MCNAOqiDCM::createAliasPrepareCommand(std::string aliasName,
   alias_command[4].arraySetSize(1);
   // placeholder for command values
   alias_command[5].arraySetSize(mem_keys.size());
-  for (int i = 0; i < mem_keys.size(); i++){
+  for(int i = 0; i < mem_keys.size(); i++)
+  {
     // allocate space for a new value for a memory key to be set via setAlias call
     alias_command[5][i].arraySetSize(1);
   }
@@ -317,14 +350,15 @@ void MCNAOqiDCM::createAliasPrepareCommand(std::string aliasName,
 void MCNAOqiDCM::createLedAliases()
 {
   // RGB led groups
-  for(int i=0;i<robot_module.rgbLedGroups.size();i++){
-    const rgbLedGroup& leds = robot_module.rgbLedGroups[i];
+  for(int i = 0; i < robot_module.rgbLedGroups.size(); i++)
+  {
+    const rgbLedGroup & leds = robot_module.rgbLedGroups[i];
     AL::ALValue redLedCommands;
     AL::ALValue greenLedCommands;
     AL::ALValue blueLedCommands;
-    std::string rName = leds.groupName+std::string("Red");
-    std::string gName = leds.groupName+std::string("Green");
-    std::string bName = leds.groupName+std::string("Blue");
+    std::string rName = leds.groupName + std::string("Red");
+    std::string gName = leds.groupName + std::string("Green");
+    std::string bName = leds.groupName + std::string("Blue");
     createAliasPrepareCommand(rName, leds.redLedKeys, redLedCommands, "Merge");
     createAliasPrepareCommand(gName, leds.greenLedKeys, greenLedCommands, "Merge");
     createAliasPrepareCommand(bName, leds.blueLedKeys, blueLedCommands, "Merge");
@@ -333,8 +367,9 @@ void MCNAOqiDCM::createLedAliases()
   }
 
   // Single channel led groups
-  for(int i=0;i<robot_module.iLedGroups.size();i++){
-    const iLedGroup& leds = robot_module.iLedGroups[i];
+  for(int i = 0; i < robot_module.iLedGroups.size(); i++)
+  {
+    const iLedGroup & leds = robot_module.iLedGroups[i];
     AL::ALValue intensityLedCommands;
     createAliasPrepareCommand(leds.groupName, leds.intensityLedKeys, intensityLedCommands, "Merge");
     // map led group name to led commands
@@ -342,12 +377,15 @@ void MCNAOqiDCM::createLedAliases()
   }
 }
 
-void MCNAOqiDCM::setWheelsStiffness(const float &stiffnessValue)
+void MCNAOqiDCM::setWheelsStiffness(const float & stiffnessValue)
 {
   int DCMtime;
-  try{
+  try
+  {
     DCMtime = dcmProxy->getTime(0);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "setStiffness()", "Error on DCM getTime : " + e.toString());
   }
 
@@ -356,19 +394,25 @@ void MCNAOqiDCM::setWheelsStiffness(const float &stiffnessValue)
   wheelsStiffnessCommands[5][1][0] = stiffnessValue;
   wheelsStiffnessCommands[5][2][0] = stiffnessValue;
 
-  try  {
+  try
+  {
     dcmProxy->setAlias(wheelsStiffnessCommands);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "setWheelsStiffness()", "Error when sending stiffness to DCM : " + e.toString());
   }
 }
 
-void MCNAOqiDCM::setWheelSpeed(const float &speed_fl, const float &speed_fr, const float &speed_b)
+void MCNAOqiDCM::setWheelSpeed(const float & speed_fl, const float & speed_fr, const float & speed_b)
 {
   int DCMtime;
-  try{
+  try
+  {
     DCMtime = dcmProxy->getTime(0);
-  }catch (const AL::ALError &e)  {
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "setWheelSpeed()", "Error on DCM getTime : " + e.toString());
   }
 
@@ -377,32 +421,42 @@ void MCNAOqiDCM::setWheelSpeed(const float &speed_fl, const float &speed_fr, con
   wheelsCommands[5][1][0] = speed_fr;
   wheelsCommands[5][2][0] = speed_b;
 
-  try{
+  try
+  {
     dcmProxy->setAlias(wheelsCommands);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "setWheelSpeed()", "Error when sending command to DCM : " + e.toString());
   }
 }
 
-void MCNAOqiDCM::setStiffness(const float &stiffnessValue)
+void MCNAOqiDCM::setStiffness(const float & stiffnessValue)
 {
   int DCMtime;
   // increase stiffness with the "jointStiffness" Alias created at initialisation
-  try{
+  try
+  {
     DCMtime = dcmProxy->getTime(0);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "setStiffness()", "Error on DCM getTime : " + e.toString());
   }
 
   jointStiffnessCommands[4][0] = DCMtime;
 
-  for(int i=0;i<robot_module.actuators.size();i++){
+  for(int i = 0; i < robot_module.actuators.size(); i++)
+  {
     jointStiffnessCommands[5][i][0] = stiffnessValue;
   }
 
-  try{
+  try
+  {
     dcmProxy->setAlias(jointStiffnessCommands);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "setStiffness()", "Error when sending stiffness to DCM : " + e.toString());
   }
 }
@@ -446,8 +500,10 @@ std::vector<std::string> MCNAOqiDCM::tactileSensorNames() const
 std::vector<std::string> MCNAOqiDCM::wheelNames() const
 {
   std::vector<std::string> wheelNames;
-  for (size_t i = 0; i < robot_module.specialJointGroups.size(); i++) {
-    if(robot_module.specialJointGroups[i].groupName == "wheels"){
+  for(size_t i = 0; i < robot_module.specialJointGroups.size(); i++)
+  {
+    if(robot_module.specialJointGroups[i].groupName == "wheels")
+    {
       wheelNames = robot_module.specialJointGroups[i].jointsNames;
       break;
     }
@@ -467,12 +523,16 @@ std::vector<float> MCNAOqiDCM::getSensors()
 void MCNAOqiDCM::connectToDCMloop()
 {
   // Connect callback to the DCM pre proccess
-  try{
-    //  onPreProcess is useful because it’s called just before the computation of orders sent to the chestboard (USB). Sending commands at this level means that you have the shortest delay to your command.
-    fDCMPreProcessConnection =
-        getParentBroker()->getProxy("DCM")->getModule()->atPreProcess(boost::bind(&MCNAOqiDCM::synchronisedDCMcallback, this));
-        // what happens if I add it twice? add same callback while it is already added? try in python?
-  }catch (const AL::ALError &e){
+  try
+  {
+    //  onPreProcess is useful because it’s called just before the computation of orders sent to the chestboard (USB).
+    //  Sending commands at this level means that you have the shortest delay to your command.
+    fDCMPreProcessConnection = getParentBroker()->getProxy("DCM")->getModule()->atPreProcess(
+        boost::bind(&MCNAOqiDCM::synchronisedDCMcallback, this));
+    // what happens if I add it twice? add same callback while it is already added? try in python?
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "connectToDCMloop()", "Error when connecting to DCM preProccess: " + e.toString());
   }
 }
@@ -483,51 +543,63 @@ void MCNAOqiDCM::synchronisedDCMcallback()
 {
   int DCMtime;
 
-  try{
+  try
+  {
     // Get absolute time, at 0 ms in the future ( i.e. now )
     DCMtime = dcmProxy->getTime(0);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "synchronisedDCMcallback()", "Error on DCM getTime : " + e.toString());
   }
 
   commands[4][0] = DCMtime;
 
   // XXX make this faster with memcpy?
-  for (unsigned i = 0; i < robot_module.actuators.size(); i++){
+  for(unsigned i = 0; i < robot_module.actuators.size(); i++)
+  {
     // new actuator value = latest values from jointPositionCommands
     commands[5][i][0] = jointPositionCommands[i];
   }
 
-  try{
+  try
+  {
     dcmProxy->setAlias(commands);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "synchronisedDCMcallback()", "Error when sending command to DCM : " + e.toString());
   }
 }
 
-
-void MCNAOqiDCM::sayText(const std::string &toSay)
+void MCNAOqiDCM::sayText(const std::string & toSay)
 {
-  try{
+  try
+  {
     AL::ALTextToSpeechProxy tts(getParentBroker());
     tts.say(toSay);
-  }catch (const AL::ALError &){
+  }
+  catch(const AL::ALError &)
+  {
     qiLogError("module.example") << "Could not get proxy to ALTextToSpeech" << std::endl;
   }
 }
 
-
-void MCNAOqiDCM::setLeds(std::string ledGroupName, const float &r, const float &g, const float &b)
+void MCNAOqiDCM::setLeds(std::string ledGroupName, const float & r, const float & g, const float & b)
 {
   int DCMtime;
-  try{
+  try
+  {
     DCMtime = dcmProxy->getTime(0);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "changeShouldersLeds()", "Error on DCM getTime : " + e.toString());
   }
 
-  if(ledCmdMap.find(ledGroupName) != ledCmdMap.end()){
-    std::vector<AL::ALValue> &rgbCmnds = ledCmdMap[ledGroupName];
+  if(ledCmdMap.find(ledGroupName) != ledCmdMap.end())
+  {
+    std::vector<AL::ALValue> & rgbCmnds = ledCmdMap[ledGroupName];
 
     qiLogInfo("rgbCmnds[0].getSize()") << rgbCmnds[0].getSize() << std::endl;
     qiLogInfo("rgbCmnds[0][5].getSize()") << rgbCmnds[0][5].getSize() << std::endl;
@@ -537,33 +609,45 @@ void MCNAOqiDCM::setLeds(std::string ledGroupName, const float &r, const float &
     rgbCmnds[2][4][0] = DCMtime;
 
     // set RGB values for every memory key of this led group
-    for (int i = 0; i < rgbCmnds[0][5].getSize(); i++){
+    for(int i = 0; i < rgbCmnds[0][5].getSize(); i++)
+    {
       rgbCmnds[0][5][i][0] = r;
       rgbCmnds[1][5][i][0] = g;
       rgbCmnds[2][5][i][0] = b;
     }
 
-    try{
+    try
+    {
       dcmProxy->setAlias(rgbCmnds[0]);
       dcmProxy->setAlias(rgbCmnds[1]);
       dcmProxy->setAlias(rgbCmnds[2]);
-    }catch (const AL::ALError &e){
+    }
+    catch(const AL::ALError & e)
+    {
       throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
     }
   }
 }
 
-void MCNAOqiDCM::setLedsDelay(std::string ledGroupName, const float &r, const float &g, const float &b, const int& delay)
+void MCNAOqiDCM::setLedsDelay(std::string ledGroupName,
+                              const float & r,
+                              const float & g,
+                              const float & b,
+                              const int & delay)
 {
   int DCMtime;
-  try{
+  try
+  {
     DCMtime = dcmProxy->getTime(delay);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "changeShouldersLeds()", "Error on DCM getTime : " + e.toString());
   }
 
-  if(ledCmdMap.find(ledGroupName) != ledCmdMap.end()){
-    std::vector<AL::ALValue> &rgbCmnds = ledCmdMap[ledGroupName];
+  if(ledCmdMap.find(ledGroupName) != ledCmdMap.end())
+  {
+    std::vector<AL::ALValue> & rgbCmnds = ledCmdMap[ledGroupName];
 
     qiLogInfo("rgbCmnds[0].getSize()") << rgbCmnds[0].getSize() << std::endl;
     qiLogInfo("rgbCmnds[0][5].getSize()") << rgbCmnds[0][5].getSize() << std::endl;
@@ -573,44 +657,55 @@ void MCNAOqiDCM::setLedsDelay(std::string ledGroupName, const float &r, const fl
     rgbCmnds[2][4][0] = DCMtime;
 
     // set RGB values for every memory key of this led group
-    for (int i = 0; i < rgbCmnds[0][5].getSize(); i++){
+    for(int i = 0; i < rgbCmnds[0][5].getSize(); i++)
+    {
       rgbCmnds[0][5][i][0] = r;
       rgbCmnds[1][5][i][0] = g;
       rgbCmnds[2][5][i][0] = b;
     }
 
-    try{
+    try
+    {
       dcmProxy->setAlias(rgbCmnds[0]);
       dcmProxy->setAlias(rgbCmnds[1]);
       dcmProxy->setAlias(rgbCmnds[2]);
-    }catch (const AL::ALError &e){
+    }
+    catch(const AL::ALError & e)
+    {
       throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
     }
   }
 }
 
-void MCNAOqiDCM::isetLeds(std::string ledGroupName, const float &intensity)
+void MCNAOqiDCM::isetLeds(std::string ledGroupName, const float & intensity)
 {
   int DCMtime;
-  try{
+  try
+  {
     DCMtime = dcmProxy->getTime(0);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "changeShouldersLeds()", "Error on DCM getTime : " + e.toString());
   }
 
-  std::vector<AL::ALValue> &intensityCmnds = ledCmdMap[ledGroupName];
+  std::vector<AL::ALValue> & intensityCmnds = ledCmdMap[ledGroupName];
   // assert if intensityCmnds.size()==1, indeed single channel led group
 
   intensityCmnds[0][4][0] = DCMtime;
 
   // set intensity values for every memory key of this led group
-  for (int i = 0; i < intensityCmnds[0][5].getSize(); i++){
+  for(int i = 0; i < intensityCmnds[0][5].getSize(); i++)
+  {
     intensityCmnds[0][5][i][0] = intensity;
   }
 
-  try{
+  try
+  {
     dcmProxy->setAlias(intensityCmnds[0]);
-  }catch (const AL::ALError &e){
+  }
+  catch(const AL::ALError & e)
+  {
     throw ALERROR(getName(), "changeShouldersLeds()", "Error when sending command to DCM : " + e.toString());
   }
 }
@@ -625,4 +720,4 @@ void MCNAOqiDCM::blink()
   setLedsDelay("eyesCenter", 1.0, 1.0, 1.0, 300);
 }
 
-} /* mc_naoqi_dcm */
+} // namespace mc_naoqi_dcm

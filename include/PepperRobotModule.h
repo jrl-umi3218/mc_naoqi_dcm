@@ -9,4 +9,4 @@ struct PepperRobotModule : public RobotModule
   PepperRobotModule();
 };
 
-} /* mc_naoqi_dcm */
+} // namespace mc_naoqi_dcm

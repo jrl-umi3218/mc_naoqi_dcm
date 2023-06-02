@@ -9,4 +9,4 @@ struct NAORobotModule : public RobotModule
   NAORobotModule();
 };
 
-} /* mc_naoqi_dcm */
+} // namespace mc_naoqi_dcm

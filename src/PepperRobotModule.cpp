@@ -7,9 +7,9 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   name = "pepper";
 
   // body joints
-  actuators = {"KneePitch", "HipPitch", "HipRoll", "HeadYaw", "HeadPitch",
-   	"LShoulderPitch", "LShoulderRoll", "LElbowYaw", "LElbowRoll", "LWristYaw", "LHand",
-   	"RShoulderPitch", "RShoulderRoll", "RElbowYaw", "RElbowRoll", "RWristYaw", "RHand"};
+  actuators = {"KneePitch",     "HipPitch",  "HipRoll",    "HeadYaw",   "HeadPitch", "LShoulderPitch",
+               "LShoulderRoll", "LElbowYaw", "LElbowRoll", "LWristYaw", "LHand",     "RShoulderPitch",
+               "RShoulderRoll", "RElbowYaw", "RElbowRoll", "RWristYaw", "RHand"};
 
   // generate memory keys for sending commands to the joints (position/stiffness)
   genMemoryKeys("", actuators, "/Position/Actuator/Value", setActuatorKeys);
@@ -50,8 +50,9 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
 
   rgbLedGroup eyesPeripheral;
   eyesPeripheral.groupName = "eyesPeripheral";
-  eyesPeripheral.ledNames = {"Right/0Deg", "Right/90Deg", "Right/135Deg", "Right/180Deg", "Right/270Deg", "Right/315Deg",
-                             "Left/0Deg", "Left/45Deg", "Left/135Deg", "Left/180Deg", "Left/225Deg", "Left/315Deg"};
+  eyesPeripheral.ledNames = {"Right/0Deg",   "Right/90Deg",  "Right/135Deg", "Right/180Deg",
+                             "Right/270Deg", "Right/315Deg", "Left/0Deg",    "Left/45Deg",
+                             "Left/135Deg",  "Left/180Deg",  "Left/225Deg",  "Left/315Deg"};
   genMemoryKeys("Face/Led/Red/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.redLedKeys);
   genMemoryKeys("Face/Led/Green/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.greenLedKeys);
   genMemoryKeys("Face/Led/Blue/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.blueLedKeys);
@@ -70,12 +71,13 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   unsigned numEarLeds = 10;
   unsigned earLedAngleStep = 36;
   // generate memory keys for changing color of all ear leds
-  for (unsigned i = 0; i < numEarLeds; i++){
-    earsLeds.ledNames.push_back("Right/" + std::to_string(i*earLedAngleStep) + "Deg");
-    earsLeds.ledNames.push_back("Left/" + std::to_string(i*earLedAngleStep) + "Deg");
+  for(unsigned i = 0; i < numEarLeds; i++)
+  {
+    earsLeds.ledNames.push_back("Right/" + std::to_string(i * earLedAngleStep) + "Deg");
+    earsLeds.ledNames.push_back("Left/" + std::to_string(i * earLedAngleStep) + "Deg");
   }
   genMemoryKeys("Ears/Led/", earsLeds.ledNames, "/Actuator/Value", earsLeds.intensityLedKeys);
   iLedGroups.push_back(earsLeds);
 }
 
-} /* mc_naoqi_dcm */
+} // namespace mc_naoqi_dcm

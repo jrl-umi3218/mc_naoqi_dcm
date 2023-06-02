@@ -1,5 +1,5 @@
 # mc_naoqi_dcm
-[![CI of mc_naoqi_dcm with Docker](https://github.com/jrl-umi3218/mc_naoqi_dcm/actions/workflows/build-docker.yml/badge.svg)](https://github.com/jrl-umi3218/mc_naoqi_dcm/actions/workflows/build-docker.yml)
+[![CI of mc_naoqi_dcm with Docker](https://github.com/jrl-umi3218/mc_naoqi_dcm/actions/workflows/build-docker.yml/badge.svg)](https://github.com/jrl-umi3218/mc_naoqi_dcm/actions/workflows/build-docker.yml)[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jrl-umi3218/mc_naoqi_dcm/master.svg)](https://results.pre-commit.ci/latest/github/jrl-umi3218/mc_naoqi_dcm/master)
 
 Fast communication module between NAO/PEPPER robot sensors and actuators and [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) control framework.
 This is a local robot module, which needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot. This module provides fast access to the low level [Device Communication Manager](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/naoqi-apis/dcm) module of [NAOqi OS](https://developer.softbankrobotics.com/pepper-naoqi-25), it allows to set/get actuator values under 12ms.
@@ -70,7 +70,7 @@ The installation consists of uploading the module to the robot and making it aut
 1. Transfer `libmc_naoqi_dcm.so` file to the robot:
 ```bash
 rsync build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so nao@pepper.local:/home/nao/naoqi/ # For Option 1
-# Or: 
+# Or:
 rsync /tmp/libmc_naoqi_dcm.so nao@pepper.local:/home/nao/naoqi/ # For Option 2
 ```
 2. Login to robot system:
