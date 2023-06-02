@@ -43,13 +43,13 @@ jobs:
         echo "::endgroup::"
         echo "::group::Copy built library"
         id=$(docker create mc_naoqi_dcm-ci-${{matrix.os}}-pepper)
-        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_pepper.so 
+        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_pepper.so
         docker rm -v $id
         echo "::endgroup::"
     - name: Upload library as artefact (pepper)
       uses: actions/upload-artifact@master
       with:
-        name: libmc_naoqi_dcm_pepper.so 
+        name: libmc_naoqi_dcm_pepper.so
         path: /tmp/libmc_naoqi_dcm_pepper.so
     - name: Build within Docker (NAO)
       run: |
@@ -67,11 +67,11 @@ jobs:
         echo "::endgroup::"
         echo "::group::Copy built library"
         id=$(docker create mc_naoqi_dcm-ci-${{matrix.os}}-nao)
-        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_nao.so 
+        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_nao.so
         docker rm -v $id
         echo "::endgroup::"
     - name: Upload library as artefact (NAO)
       uses: actions/upload-artifact@master
       with:
-        name: libmc_naoqi_dcm_nao.so 
+        name: libmc_naoqi_dcm_nao.so
         path: /tmp/libmc_naoqi_dcm_nao.so
