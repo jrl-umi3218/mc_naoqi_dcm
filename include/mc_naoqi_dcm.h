@@ -194,7 +194,9 @@ private:
    */
 
   // map led group name to corresponding RGB or intensity commands
-  std::map<std::string, std::vector<AL::ALValue>> ledCmdMap;
+  // clang-format off
+  std::map< std::string, std::vector<AL::ALValue> > ledCmdMap;
+  // clang-format on
 
   /**
    * Store commands to send to wheels (speed and stiffness)
