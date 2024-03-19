@@ -4,6 +4,16 @@
 Fast communication module between NAO/PEPPER robot sensors and actuators and [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/index.html) control framework.
 This is a local robot module, which needs to be cross-compiled for the desired platform (NAO or Pepper), and uploaded on the robot. This module provides fast access to the low level [Device Communication Manager](https://developer.softbankrobotics.com/pepper-naoqi-25/naoqi-developer-guide/naoqi-apis/dcm) module of [NAOqi OS](https://developer.softbankrobotics.com/pepper-naoqi-25), it allows to set/get actuator values under 12ms.
 
+# Supported versions
+
+This module needs to be cross-compiled and sent to the robot (Pepper/NAO). Unfortunately the cross-compilation toolchains are old and no longer supported, and the robots are almost impossible to upgrade anymore. Thus we have to rely on the few existing toolchains that have not been lost to time. As of now the following toolchains are supported:
+
+- `ctc-naoqi-2.5.0`: Builds with `boost 1.59`, should be suitable for older version of `Pepper`. You may find a backup of this toolchain here: https://seafile.lirmm.fr/f/5389d0a64d79481ab49e/?dl=1
+- `ctc-linux64-atom-2.1.4.13`: Builds with `boost 1.55`, should be suitable for older version of `NAO`. You may find a backup of this toolchain here: https://seafile.lirmm.fr/f/ba804ce9277544f2b6ec/?dl=1
+- Newer toolchains should be supported as well, but we do not own any robot recent enough to test them.
+
+If you rely on one of these toolchains, it is highly recommended that you keep a local backup of the toolchain.
+
 # Building
 
 This module needs to be cross-compiled and sent to the robot. For this you have three options (choose which one fits you best):
@@ -48,11 +58,11 @@ You may now upload `qibuild_ws/mc_naoqi_dcm/build-ctc-naoqi-config/sdk/lib/naoqi
 
 ## Option 2: Build using the provided Dockerfile
 
-You may use the provided `Dockerfile` that sets up the cross-compilation environment for you. If you already followed `Option 1` this is not necessary.
+You may use the provided `Dockerfile` that sets up the cross-compilation environment for you. If you already followed `Option 1` this is not necessary. Please choose the appropriate `Dockerfile` depending on your desired cross-compilation toolchain: `Dockerfile_2.5.0` or `Dockerfile_2.1.4`
 
 ```sh
 cd <mc_naoqi_dcm>
-docker build -t docker-naoqi-dcm -f Dockerfile
+docker build -t docker-naoqi-dcm -f <Dockerfile_version> . # ex: docker build -t docker-naoqi-dcm -f Dockerfile_2.5.0 .
 id=$(docker create docker-naoqi-dcm)
 docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm.so
 docker rm -v $id
