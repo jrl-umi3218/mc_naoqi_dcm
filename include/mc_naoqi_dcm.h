@@ -163,7 +163,7 @@ private:
   ProcessSignalConnection fDCMPreProcessConnection;
 
   // Used to check id preprocess is connected
-  bool preProcessConnected = false;
+  bool preProcessConnected;
 
   // Used for fast memory access
   boost::shared_ptr<AL::ALMemoryFastAccess> fMemoryFastAccess;

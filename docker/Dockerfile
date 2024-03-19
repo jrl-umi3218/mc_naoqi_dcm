@@ -13,7 +13,7 @@ RUN mkdir /Workspace && cd /Workspace \
   && qibuild init \
   && qibuild add-config ctc-naoqi-config -t ctc-naoqi --default
 
-COPY .. /Workspace/qibuild_ws/mc_naoqi_dcm
+COPY . /Workspace/qibuild_ws/mc_naoqi_dcm
 RUN cd /Workspace/qibuild_ws/mc_naoqi_dcm \
  && qibuild configure --release -DROBOT_NAME=pepper \
  && qibuild make \

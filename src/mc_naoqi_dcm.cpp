@@ -32,7 +32,8 @@
 namespace mc_naoqi_dcm
 {
 MCNAOqiDCM::MCNAOqiDCM(boost::shared_ptr<AL::ALBroker> broker, const std::string & name)
-: AL::ALModule(broker, name), fMemoryFastAccess(boost::shared_ptr<AL::ALMemoryFastAccess>(new AL::ALMemoryFastAccess()))
+: AL::ALModule(broker, name),
+  fMemoryFastAccess(boost::shared_ptr<AL::ALMemoryFastAccess>(new AL::ALMemoryFastAccess())), preProcessConnected(false)
 {
   setModuleDescription("Module to communicate with mc_rtc_naoqi interface for whole-body control via mc_rtc framework");
 
@@ -363,7 +364,10 @@ void MCNAOqiDCM::createLedAliases()
     createAliasPrepareCommand(gName, leds.greenLedKeys, greenLedCommands, "Merge");
     createAliasPrepareCommand(bName, leds.blueLedKeys, blueLedCommands, "Merge");
     // map led group name to led commands
-    ledCmdMap[leds.groupName] = {redLedCommands, greenLedCommands, blueLedCommands};
+    ledCmdMap[leds.groupName].clear();
+    ledCmdMap[leds.groupName].push_back(redLedCommands);
+    ledCmdMap[leds.groupName].push_back(greenLedCommands);
+    ledCmdMap[leds.groupName].push_back(blueLedCommands);
   }
 
   // Single channel led groups
@@ -373,7 +377,8 @@ void MCNAOqiDCM::createLedAliases()
     AL::ALValue intensityLedCommands;
     createAliasPrepareCommand(leds.groupName, leds.intensityLedKeys, intensityLedCommands, "Merge");
     // map led group name to led commands
-    ledCmdMap[leds.groupName] = {intensityLedCommands};
+    ledCmdMap[leds.groupName].clear();
+    ledCmdMap[leds.groupName].push_back(intensityLedCommands);
   }
 }
 

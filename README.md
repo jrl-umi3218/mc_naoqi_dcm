@@ -52,7 +52,7 @@ You may use the provided `Dockerfile` that sets up the cross-compilation environ
 
 ```sh
 cd <mc_naoqi_dcm>
-docker build -t docker-naoqi-dcm .
+docker build -t docker-naoqi-dcm -f Dockerfile
 id=$(docker create docker-naoqi-dcm)
 docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm.so
 docker rm -v $id

@@ -7,9 +7,23 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   name = "pepper";
 
   // body joints
-  actuators = {"KneePitch",     "HipPitch",  "HipRoll",    "HeadYaw",   "HeadPitch", "LShoulderPitch",
-               "LShoulderRoll", "LElbowYaw", "LElbowRoll", "LWristYaw", "LHand",     "RShoulderPitch",
-               "RShoulderRoll", "RElbowYaw", "RElbowRoll", "RWristYaw", "RHand"};
+  actuators.push_back("KneePitch");
+  actuators.push_back("HipPitch");
+  actuators.push_back("HipRoll");
+  actuators.push_back("HeadYaw");
+  actuators.push_back("HeadPitch");
+  actuators.push_back("LShoulderPitch");
+  actuators.push_back("LShoulderRoll");
+  actuators.push_back("LElbowYaw");
+  actuators.push_back("LElbowRoll");
+  actuators.push_back("LWristYaw");
+  actuators.push_back("LHand");
+  actuators.push_back("RShoulderPitch");
+  actuators.push_back("RShoulderRoll");
+  actuators.push_back("RElbowYaw");
+  actuators.push_back("RElbowRoll");
+  actuators.push_back("RWristYaw");
+  actuators.push_back("RHand");
 
   // generate memory keys for sending commands to the joints (position/stiffness)
   genMemoryKeys("", actuators, "/Position/Actuator/Value", setActuatorKeys);
@@ -24,7 +38,9 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   // wheels - special joint groups
   JointGroup wheels;
   wheels.groupName = "wheels";
-  wheels.jointsNames = {"WheelFL", "WheelFR", "WheelB"};
+  wheels.jointsNames.push_back("WheelFL");
+  wheels.jointsNames.push_back("WheelFR");
+  wheels.jointsNames.push_back("WheelB");
   genMemoryKeys("", wheels.jointsNames, "/Speed/Actuator/Value", wheels.setActuatorKeys);
   genMemoryKeys("", wheels.jointsNames, "/Stiffness/Actuator/Value", wheels.setHardnessKeys);
   specialJointGroups.push_back(wheels);
@@ -32,17 +48,27 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   genMemoryKeys("", wheels.jointsNames, "/Speed/Sensor/Value", readSensorKeys, true, "Encoder");
 
   // Bumpers
-  bumpers = {"FrontLeft", "FrontRight", "Back"};
+  bumpers.push_back("FrontLeft");
+  bumpers.push_back("FrontRight");
+  bumpers.push_back("Back");
+
   genMemoryKeys("Platform/", bumpers, "/Bumper/Sensor/Value", readSensorKeys, true);
 
   // Tactile sensors
-  tactile = {"Head/Touch/Front", "Head/Touch/Rear", "Head/Touch/Middle", "RHand/Touch/Back", "LHand/Touch/Back"};
+  tactile.push_back("Head/Touch/Front");
+  tactile.push_back("Head/Touch/Rear");
+  tactile.push_back("Head/Touch/Middle");
+  tactile.push_back("RHand/Touch/Back");
+  tactile.push_back("LHand/Touch/Back");
   genMemoryKeys("", tactile, "/Sensor/Value", readSensorKeys, true);
 
   // led groups
   rgbLedGroup eyesCenter;
   eyesCenter.groupName = "eyesCenter";
-  eyesCenter.ledNames = {"Right/45Deg", "Right/225Deg", "Left/270Deg", "Left/90Deg"};
+  eyesCenter.ledNames.push_back("Right/45Deg");
+  eyesCenter.ledNames.push_back("Right/225Deg");
+  eyesCenter.ledNames.push_back("Left/270Deg");
+  eyesCenter.ledNames.push_back("Left/90Deg");
   genMemoryKeys("Face/Led/Red/", eyesCenter.ledNames, "/Actuator/Value", eyesCenter.redLedKeys);
   genMemoryKeys("Face/Led/Green/", eyesCenter.ledNames, "/Actuator/Value", eyesCenter.greenLedKeys);
   genMemoryKeys("Face/Led/Blue/", eyesCenter.ledNames, "/Actuator/Value", eyesCenter.blueLedKeys);
@@ -50,9 +76,18 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
 
   rgbLedGroup eyesPeripheral;
   eyesPeripheral.groupName = "eyesPeripheral";
-  eyesPeripheral.ledNames = {"Right/0Deg",   "Right/90Deg",  "Right/135Deg", "Right/180Deg",
-                             "Right/270Deg", "Right/315Deg", "Left/0Deg",    "Left/45Deg",
-                             "Left/135Deg",  "Left/180Deg",  "Left/225Deg",  "Left/315Deg"};
+  eyesPeripheral.ledNames.push_back("Right/0Deg");
+  eyesPeripheral.ledNames.push_back("Right/90Deg");
+  eyesPeripheral.ledNames.push_back("Right/135Deg");
+  eyesPeripheral.ledNames.push_back("Right/180Deg");
+  eyesPeripheral.ledNames.push_back("Right/270Deg");
+  eyesPeripheral.ledNames.push_back("Right/315Deg");
+  eyesPeripheral.ledNames.push_back("Left/0Deg");
+  eyesPeripheral.ledNames.push_back("Left/45Deg");
+  eyesPeripheral.ledNames.push_back("Left/135Deg");
+  eyesPeripheral.ledNames.push_back("Left/180Deg");
+  eyesPeripheral.ledNames.push_back("Left/225Deg");
+  eyesPeripheral.ledNames.push_back("Left/315Deg");
   genMemoryKeys("Face/Led/Red/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.redLedKeys);
   genMemoryKeys("Face/Led/Green/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.greenLedKeys);
   genMemoryKeys("Face/Led/Blue/", eyesPeripheral.ledNames, "/Actuator/Value", eyesPeripheral.blueLedKeys);
@@ -60,7 +95,7 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
 
   rgbLedGroup shoulderLeds;
   shoulderLeds.groupName = "shoulderLeds";
-  shoulderLeds.ledNames = {""};
+  shoulderLeds.ledNames.push_back("");
   genMemoryKeys("ChestBoard/Led/Red", shoulderLeds.ledNames, "/Actuator/Value", shoulderLeds.redLedKeys);
   genMemoryKeys("ChestBoard/Led/Green", shoulderLeds.ledNames, "/Actuator/Value", shoulderLeds.greenLedKeys);
   genMemoryKeys("ChestBoard/Led/Blue", shoulderLeds.ledNames, "/Actuator/Value", shoulderLeds.blueLedKeys);
@@ -73,8 +108,8 @@ PepperRobotModule::PepperRobotModule() : RobotModule()
   // generate memory keys for changing color of all ear leds
   for(unsigned i = 0; i < numEarLeds; i++)
   {
-    earsLeds.ledNames.push_back("Right/" + std::to_string(i * earLedAngleStep) + "Deg");
-    earsLeds.ledNames.push_back("Left/" + std::to_string(i * earLedAngleStep) + "Deg");
+    earsLeds.ledNames.push_back("Right/" + mc_naoqi_dcm::to_string(i * earLedAngleStep) + "Deg");
+    earsLeds.ledNames.push_back("Left/" + mc_naoqi_dcm::to_string(i * earLedAngleStep) + "Deg");
   }
   genMemoryKeys("Ears/Led/", earsLeds.ledNames, "/Actuator/Value", earsLeds.intensityLedKeys);
   iLedGroups.push_back(earsLeds);
