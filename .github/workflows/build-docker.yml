@@ -31,24 +31,8 @@ jobs:
         submodules: recursive
     - name: Build with Docker (${{matrix.robot}} (ctc-toolchain version - ${{matrix.version}})
       run: |
-        echo "::group::Setup Dockerfile"
-        mkdir -p /tmp/mc_naoqi_dcm-docker
-        cp -r `pwd` /tmp/mc_naoqi_dcm-docker/mc_naoqi_dcm
-        cp .github/workflows/docker/Dockerfile_${{ matrix.version }} /tmp/mc_naoqi_dcm-docker/Dockerfile
-        cd /tmp/mc_naoqi_dcm-docker
-        sed -i -e 's/@ROBOT_NAME@/${{matrix.robot}}/g' Dockerfile
-        echo "::endgroup::"
-        echo "::group::Dockerfile used to build mc_naoqi_dcm"
-        cat Dockerfile
-        echo "::endgroup::"
-        echo "::group::Build base image"
-        docker build -t mc_naoqi_dcm-ci-${{matrix.version}}-${{matrix.robot}} .
-        echo "::endgroup::"
-        echo "::group::Copy built library"
-        id=$(docker create mc_naoqi_dcm-ci-${{matrix.version}}-${{matrix.robot}})
-        docker cp $id:/libmc_naoqi_dcm.so /tmp/libmc_naoqi_dcm_${{matrix.robot}}_${{matrix.version}}.so
-        docker rm -v $id
-        echo "::endgroup::"
+        echo "Starting docker build for ${{matrix.robot}} (ctc-toolchain version - ${{matrix.version}})"
+        ./docker/build.sh ${{matrix.robot}} ${{matrix.version}}
     - name: Upload library as artefact (${{matrix.robot}} (ctc-toolchain version - ${{matrix.version}})
       uses: actions/upload-artifact@master
       with:
