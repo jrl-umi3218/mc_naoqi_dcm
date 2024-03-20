@@ -15,7 +15,7 @@ RUN mkdir /Workspace && cd /Workspace \
 
 COPY . /Workspace/qibuild_ws/mc_naoqi_dcm
 RUN cd /Workspace/qibuild_ws/mc_naoqi_dcm \
- && qibuild configure --release -DROBOT_NAME=pepper \
+ && qibuild configure --release -DROBOT_NAME=@ROBOT_NAME@ \
  && qibuild make \
  && mv /Workspace/qibuild_ws/mc_naoqi_dcm/build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so /libmc_naoqi_dcm.so
 RUN ls /
