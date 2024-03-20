@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 2.8)
 project(mc_naoqi_dcm)
 set(ROBOT_NAME "pepper" CACHE STRING "Build with this robot (pepper|nao)")
+
+# NOTE: We cannot use C++11 here, nor C++0x or gnu++11 since we need to keep on supporting
+# older version of the ctc toolchain. In particular with boost 1.55 this would fail.
 
 find_package(qibuild)
 

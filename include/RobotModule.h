@@ -1,9 +1,18 @@
 #pragma once
+#include <sstream>
 #include <string>
 #include <vector>
 
 namespace mc_naoqi_dcm
 {
+/** Reimplement std::to_string to support pre-C++11 era */
+template<typename T>
+inline std::string to_string(T num)
+{
+  std::stringstream ss;
+  ss << num;
+  return ss.str();
+}
 
 struct JointGroup
 {
@@ -31,6 +40,8 @@ struct iLedGroup
 
 struct RobotModule
 {
+  RobotModule();
+
   // Robot name (e.g. nao or pepper)
   std::string name;
   // Body joints
@@ -44,8 +55,7 @@ struct RobotModule
   // Memory keys to read all sensors with single call to ALMemoryFastAccess
   std::vector<std::string> readSensorKeys;
   // IMU sensor names
-  std::vector<std::string> imu = {"AccelerometerX", "AccelerometerY", "AccelerometerZ", "GyroscopeX", "GyroscopeY",
-                                  "GyroscopeZ",     "AngleX",         "AngleY",         "AngleZ"};
+  std::vector<std::string> imu;
   // Groups of special robot joints (e.g. wheels)
   std::vector<JointGroup> specialJointGroups;
   // Groups of RGB leds

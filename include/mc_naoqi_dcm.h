@@ -163,7 +163,7 @@ private:
   ProcessSignalConnection fDCMPreProcessConnection;
 
   // Used to check id preprocess is connected
-  bool preProcessConnected = false;
+  bool preProcessConnected;
 
   // Used for fast memory access
   boost::shared_ptr<AL::ALMemoryFastAccess> fMemoryFastAccess;
@@ -194,7 +194,9 @@ private:
    */
 
   // map led group name to corresponding RGB or intensity commands
-  std::map<std::string, std::vector<AL::ALValue>> ledCmdMap;
+  // clang-format off
+  std::map< std::string, std::vector<AL::ALValue> > ledCmdMap;
+  // clang-format on
 
   /**
    * Store commands to send to wheels (speed and stiffness)

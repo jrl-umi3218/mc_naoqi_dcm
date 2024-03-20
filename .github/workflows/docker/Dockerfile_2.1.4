@@ -1,0 +1,22 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update -qq && apt-get install -qq cmake cmake-data wget lsb-release git sudo python3 python3-pip unzip vim
+RUN python3 -m pip install qibuild
+RUN mkdir /Workspace && cd /Workspace \
+  && wget -c https://seafile.lirmm.fr/f/ba804ce9277544f2b6ec/?dl=1 -O ctc-naoqi.zip \
+  && unzip ctc-naoqi.zip -d ctc-naoqi-tmp \
+  && mv ctc-naoqi-tmp/ctc-linux64-atom-2.1.4.13 ctc-naoqi \
+  && qitoolchain create ctc-naoqi ctc-naoqi/toolchain.xml \
+  && mkdir qibuild_ws && cd qibuild_ws \
+  && qibuild init \
+  && qibuild add-config ctc-naoqi-config -t ctc-naoqi --default
+
+COPY mc_naoqi_dcm /Workspace/qibuild_ws/mc_naoqi_dcm
+RUN cd /Workspace/qibuild_ws/mc_naoqi_dcm \
+ && qibuild configure --release -DROBOT_NAME=@ROBOT_NAME@ \
+ && qibuild make \
+ && mv /Workspace/qibuild_ws/mc_naoqi_dcm/build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so /libmc_naoqi_dcm.so
+ RUN ls /
+ RUN echo "Created library: /mc_naoqi_dcm.so"

@@ -3,6 +3,19 @@
 namespace mc_naoqi_dcm
 {
 
+RobotModule::RobotModule()
+{
+  imu.push_back("AccelerometerX");
+  imu.push_back("AccelerometerY");
+  imu.push_back("AccelerometerZ");
+  imu.push_back("GyroscopeX");
+  imu.push_back("GyroscopeY");
+  imu.push_back("GyroscopeZ");
+  imu.push_back("AngleX");
+  imu.push_back("AngleY");
+  imu.push_back("AngleZ");
+}
+
 // Function to create various memory key groups
 void RobotModule::genMemoryKeys(std::string prefix,
                                 std::vector<std::string> & devices,
