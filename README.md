@@ -18,7 +18,26 @@ If you rely on one of these toolchains, it is highly recommended that you keep a
 
 This module needs to be cross-compiled and sent to the robot. For this you have three options (choose which one fits you best):
 
-## Option 1: Build locally using the cross compilation toolchain
+## Option 1 (recommended): Build using the provided Dockerfile
+
+You may use the provided `Dockerfile` that sets up the cross-compilation environment for you. If you already followed `Option 1` this is not necessary. Please choose the appropriate `Dockerfile` depending on your desired cross-compilation toolchain: `Dockerfile_2.5.0` or `Dockerfile_2.1.4`
+
+```sh
+cd <mc_naoqi_dcm>
+./docker/build.sh nao 2.1.4 # arguments here are robot name [nao|pepper] and library version [2.1.4|2.5.0]
+# for pepper use
+# ./docker/build.sh pepper 2.5.0
+```
+If the build suceeds, it will copy the generated library to `/tmp/libmc_naoqi_dcm_<robot>_<version>.so`. You may then copy this library on the robot (see `Installing on the robot` section).
+
+If there is any issue with building you may use the following to connect to the docker and investigate
+
+```sh
+./docker/run.sh nao 2.1.4
+```
+
+
+## Option 2: Build locally using the cross compilation toolchain
 
 ### 1. Installing `qiBuild` and creating a worktree
 
@@ -55,24 +74,6 @@ This module needs to be cross-compiled and sent to the robot. For this you have 
   ```
 
 You may now upload `qibuild_ws/mc_naoqi_dcm/build-ctc-naoqi-config/sdk/lib/naoqi/libmc_naoqi_dcm.so` to the robot.
-
-## Option 2: Build using the provided Dockerfile
-
-You may use the provided `Dockerfile` that sets up the cross-compilation environment for you. If you already followed `Option 1` this is not necessary. Please choose the appropriate `Dockerfile` depending on your desired cross-compilation toolchain: `Dockerfile_2.5.0` or `Dockerfile_2.1.4`
-
-```sh
-cd <mc_naoqi_dcm>
-./docker/build.sh nao 2.1.4 # arguments here are robot name [nao|pepper] and library version [2.1.4|2.5.0]
-# for pepper use
-# ./docker/build.sh pepper 2.5.0
-```
-If the build suceeds, it will copy the generated library to `/tmp/libmc_naoqi_dcm_<robot>_<version>.so`. You may then copy this library on the robot (see `Installing on the robot` section).
-
-If there is any issue with building you may use the following to connect to the docker and investigate
-
-```sh
-./docker/run.sh nao 2.1.4
-```
 
 ## Option 3: Using the pre-built library
 
