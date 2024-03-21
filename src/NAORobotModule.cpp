@@ -55,14 +55,14 @@ NAORobotModule::NAORobotModule()
   footFSR.push_back("CenterOfPressure/X");
   footFSR.push_back("CenterOfPressure/Y");
 
-  genMemoryKeys("LFoot/", footFSR, "/Sensor/Value", readSensorKeys, true, "LFoot");
-  genMemoryKeys("RFoot/", footFSR, "/Sensor/Value", readSensorKeys, true, "RFoot");
+  genMemoryKeys("LFoot/FSR/", footFSR, "/Sensor/Value", readSensorKeys, true, "LFoot");
+  genMemoryKeys("RFoot/FSR/", footFSR, "/Sensor/Value", readSensorKeys, true, "RFoot");
 
   // Feet bumpers (two per each foot)
-  bumpers.push_back("LFoot");
-  bumpers.push_back("RFoot");
-  genMemoryKeys("", bumpers, "/Bumper/Right/Sensor/Value", readSensorKeys, true);
-  genMemoryKeys("", bumpers, "/Bumper/Left/Sensor/Value", readSensorKeys, true);
+  bumpers.push_back("Bumper/Right");
+  bumpers.push_back("Bumper/Left");
+  genMemoryKeys("LFoot/", bumpers, "/Sensor/Value", readSensorKeys, true, "LFoot");
+  genMemoryKeys("RFoot/", bumpers, "/Sensor/Value", readSensorKeys, true, "RFoot");
 
   // led groups
   rgbLedGroup eyesLeds;
